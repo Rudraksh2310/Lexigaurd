@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # LexiGuard AI — Legal Document Red Flag Extractor
 
 Upload a contract, offer letter, rent agreement, NDA or terms of service.
@@ -122,3 +123,7 @@ samples/          test documents (offer letter, service agreement, resume, borde
   analysis and chat, and to Microsoft when `TTS_ENGINE=edge`.
 
 LexiGuard is decision support, not legal advice.
+=======
+# Lexigaurd
+An ai which helps consumers prevent from falling into legal traps by analysing and identifying clauses which might be used against them or can be used to exploit them. This website also helps user to draft any legal document in a very easy and systematic manner.
+>>>>>>> 85b50387ec27fae9c2924e5511aaba57f5f8de91
