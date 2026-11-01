@@ -1,0 +1,9 @@
+# secrets
+backend/.env
+# local data
+backend/audio_cache/
+backend/*.db
+__pycache__/
+*.pyc
+.venv/
+venv/

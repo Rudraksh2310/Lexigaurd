@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in — LexiGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&family=Schibsted+Grotesk:wght@400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<header id="topbar" class="topbar"></header>
+<main class="auth">
+  <section class="auth-form">
+    <div class="auth-form-in">
+      <h1 class="h1">Sign in</h1>
+      <p class="muted">Your documents, highlights and conversations are where you left them.</p>
+      <form id="form" novalidate>
+        <div class="form-alert" id="alert" role="alert"></div>
+        <div class="field">
+          <label class="label" for="email">Email</label>
+          <input class="input" id="email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label class="label" for="password">Password</label>
+          <div class="pw-wrap">
+            <input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+            <button class="pw-toggle" type="button" data-for="password" aria-pressed="false">Show</button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="remember" checked> Keep me signed in on this device</label>
+        </div>
+        <button class="btn btn-primary" type="submit" id="submit" style="width:100%;margin-top:24px;min-height:50px">Sign in</button>
+      </form>
+      <p class="auth-switch">New to LexiGuard? <a href="signup.html" id="to-signup">Create an account</a></p>
+    </div>
+  </section>
+  <aside class="auth-side" aria-hidden="true">
+    <div class="sheet auth-sheet">
+      <p class="clause-title">2. Term and Renewal</p>
+      <p>This Agreement continues for twelve months. <mark class="hl Medium">Thereafter it shall automatically renew for successive one-year terms unless either party gives notice at least 90 days before expiry.</mark></p>
+      <div class="auth-note"><b><span class="flagno Medium">2</span>Auto-renewal</b>Miss a 90-day window and you're locked in for another year. Ask for a reminder, or renewal only when both sides agree.</div>
+    </div>
+  </aside>
+</main>
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(async function () {
+  const next = LG.safeNext();
+  const me = await LG.me();
+  if (me) { location.replace(next); return; }
+  LG.topbar(null, null);
+  document.getElementById("to-signup").href = "signup.html" + location.search;
+
+  document.querySelectorAll(".pw-toggle").forEach((b) => b.addEventListener("click", () => {
+    const i = document.getElementById(b.dataset.for), show = i.type === "password";
+    i.type = show ? "text" : "password"; b.textContent = show ? "Hide" : "Show"; b.setAttribute("aria-pressed", String(show));
+  }));
+
+  const form = document.getElementById("form"), alertBox = document.getElementById("alert"), submit = document.getElementById("submit");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    alertBox.textContent = "";
+    const email = form.email.value.trim(), password = form.password.value;
+    if (!email || !password) { alertBox.textContent = "Enter your email and password."; (email ? form.password : form.email).focus(); return; }
+    submit.classList.add("is-busy"); submit.disabled = true;
+    try {
+      await LG.api("/api/auth/login", { method: "POST", json: { email, password, remember: document.getElementById("remember").checked } });
+      location.replace(next);
+    } catch (err) {
+      alertBox.textContent = err.message;
+      form.password.select();
+    } finally {
+      submit.classList.remove("is-busy"); submit.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Draft a document — LexiGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&family=Schibsted+Grotesk:wght@400..800&family=Noto+Sans+Devanagari:wght@400..700&family=Noto+Serif+Devanagari:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  :root { --dev: "Noto Sans Devanagari", "Nirmala UI", "Mangal", sans-serif; --dev-serif: "Noto Serif Devanagari", "Nirmala UI", serif; }
+  [lang="hi"] { font-family: var(--sans), var(--dev); }
+  .page { padding: 30px 0 80px; }
+  .stepper { list-style: none; display: flex; gap: 6px; padding: 0; margin: 0 0 26px; flex-wrap: wrap; }
+  .stepper li { display: flex; align-items: center; gap: 8px; font-size: var(--t-sm); color: var(--ink-faint); font-weight: 500; }
+  .stepper li + li::before { content: ""; width: 28px; height: 1px; background: var(--rule-strong); margin-right: 2px; }
+  .stepper .n { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--rule-strong); display: grid; place-items: center; font-size: var(--t-xs); font-weight: 700; }
+  .stepper .is-now { color: var(--ink); } .stepper .is-now .n { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .stepper .is-done .n { background: var(--seal); border-color: var(--seal); color: #fff; }
+  .stepper button { border: 0; background: none; padding: 0; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .stepper button:disabled { cursor: default; }
+  .intro .lede { margin: 10px 0 0; font-size: var(--t-md); }
+
+  /* step 1: type cards */
+  .types { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; margin-top: 28px; }
+  .tcard { position: relative; text-align: left; border: 1px solid var(--sheet-edge); background: var(--sheet); border-radius: 4px; padding: 20px 20px 18px; cursor: pointer; box-shadow: 0 1px 0 rgba(27,35,64,.04); transition: transform .15s, box-shadow .15s, border-color .15s; display: grid; gap: 6px; min-height: 138px; align-content: start; }
+  .tcard::before { content: ""; position: absolute; left: 20px; right: 20px; top: 0; height: 3px; background: var(--rule); border-radius: 0 0 2px 2px; transition: background-color .15s; }
+  .tcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-sheet); border-color: var(--rule-strong); }
+  .tcard:hover::before, .tcard:focus-visible::before { background: var(--seal); }
+  .tcard strong { font: 600 1.12rem/1.3 var(--serif); }
+  .tcard span { color: var(--ink-soft); font-size: var(--t-sm); line-height: 1.5; }
+  .tcard em { font-style: normal; font-size: var(--t-xs); color: var(--ink-faint); margin-top: 6px; }
+  .recent { margin-top: 44px; }
+  .recent h2 { font: 600 var(--t-md)/1.3 var(--sans); margin: 0 0 10px; }
+  .rlist { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+  .ritem { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px; align-items: center; padding: 14px 4px; border-bottom: 1px solid var(--rule); position: relative; }
+  .ritem a { font: 600 1rem/1.35 var(--serif); color: var(--ink); text-decoration: none; }
+  .ritem a::after { content: ""; position: absolute; inset: 0; }
+  .ritem a:hover { color: var(--seal-deep); text-decoration: underline; }
+  .ritem p { margin: 2px 0 0; font-size: var(--t-xs); color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ritem .btn-icon { position: relative; z-index: 1; color: var(--ink-faint); }
+
+  /* step 2: describe */
+  .describe { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(20px, 3vw, 36px); align-items: start; }
+  .box { padding: 24px 26px; }
+  .box h2 { font: 600 var(--t-lg)/1.3 var(--serif); margin: 0 0 4px; }
+  .box .sub { margin: 0 0 16px; color: var(--ink-soft); font-size: var(--t-sm); }
+  .speak { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 10px; background: var(--bond); margin-bottom: 14px; flex-wrap: wrap; }
+  .speak .mic { width: 56px; height: 56px; }
+  .speak .mic svg { width: 24px; height: 24px; }
+  .speak-text { flex: 1; min-width: 180px; }
+  .speak-text strong { display: block; font-size: var(--t-sm); }
+  .speak-text span { font-size: var(--t-xs); color: var(--ink-faint); }
+  .live { font-size: var(--t-sm); color: var(--ink-soft); font-style: italic; margin-top: 4px; }
+  .desc { min-height: 260px; resize: vertical; line-height: 1.6; font-size: var(--t-md); padding: 14px 16px; }
+  .desc-foot { display: flex; justify-content: space-between; margin-top: 6px; font-size: var(--t-xs); color: var(--ink-faint); }
+  .details { display: grid; gap: 14px; }
+  .details .field + .field { margin-top: 0; }
+  .details textarea.input { min-height: 74px; resize: vertical; }
+  .opt-row { display: grid; gap: 8px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--rule); }
+  .opt-row .label { margin-bottom: 2px; }
+  .go-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; flex-wrap: wrap; }
+  .go-row .btn-primary { min-height: 50px; padding: 0 26px; font-size: var(--t-md); }
+  .questions { margin-top: 22px; padding: 24px 26px; border-left: 4px solid var(--seal); }
+  .q { display: grid; gap: 6px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  .q:last-of-type { border-bottom: 0; }
+  .q label { font-weight: 600; font-size: var(--t-sm); }
+
+  /* step 3: workspace */
+  body.ws-page { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  body.ws-page > .topbar { flex: none; border-bottom-color: var(--rule); }
+  body.ws-page .page { flex: 1; min-height: 0; padding: 0; display: flex; flex-direction: column; }
+  .dbar { flex: none; display: flex; align-items: center; gap: 12px; padding: 10px var(--gutter); border-bottom: 1px solid var(--rule); background: rgba(255,255,255,.6); flex-wrap: wrap; }
+  .dbar .back { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-soft); border: 0; background: none; cursor: pointer; }
+  .dbar .back:hover { background: rgba(27,35,64,.06); color: var(--ink); }
+  .dbar .back svg { width: 18px; height: 18px; }
+  .title-in { font: 600 1.12rem/1.3 var(--serif); border: 1px solid transparent; background: none; padding: 4px 8px; border-radius: 6px; min-width: 0; flex: 1; max-width: 520px; color: var(--ink); }
+  .title-in:hover { border-color: var(--rule); }
+  .title-in:focus { outline: none; border-color: var(--seal); background: var(--sheet); box-shadow: var(--focus); }
+  .save-state { font-size: var(--t-xs); color: var(--ink-faint); min-width: 64px; }
+  .dbar-tools { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .menu-wrap { position: relative; }
+  .ws2 { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 400px); }
+  .pane { min-height: 0; overflow-y: auto; padding: 28px clamp(14px, 3vw, 44px) 64px; position: relative; }
+  .side2 { min-height: 0; overflow-y: auto; background: var(--sheet); border-left: 1px solid var(--rule); display: flex; flex-direction: column; }
+  .side-sec { padding: 18px 20px; border-bottom: 1px solid var(--rule); }
+  .side-sec h2 { font: 600 var(--t-sm)/1.3 var(--sans); margin: 0 0 10px; }
+  .change-box textarea { min-height: 84px; resize: vertical; border-radius: 10px; }
+  .change-row { display: flex; gap: 8px; align-items: flex-end; margin-top: 8px; }
+  .change-row .btn-primary { flex: 1; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip-btn { border: 1px solid var(--rule); background: var(--sheet); border-radius: 14px; padding: 5px 11px; font-size: var(--t-xs); cursor: pointer; }
+  .chip-btn:hover { border-color: var(--seal); background: var(--seal-wash); }
+  .notes ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: var(--t-sm); color: var(--ink-soft); }
+  .vlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .vlist li { display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: var(--t-xs); padding: 6px 0; }
+  .vlist span { color: var(--ink-soft); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .draft-sheet { max-width: 820px; margin: 0 auto; padding: clamp(28px, 5vw, 72px) clamp(22px, 6vw, 80px); min-height: 70vh; position: relative; }
+  .draft { font-family: var(--serif); font-size: 1.04rem; line-height: 1.8; color: #20273f; font-variation-settings: "opsz" 14; }
+  .draft[lang="hi"] { font-family: var(--dev-serif); line-height: 1.95; }
+  .draft h1 { font: 700 1.45rem/1.3 var(--serif); text-align: center; letter-spacing: .02em; margin: 0 0 26px; text-transform: uppercase; }
+  .draft[lang="hi"] h1 { font-family: var(--dev-serif); text-transform: none; }
+  .draft h2 { font: 700 1.04rem/1.45 var(--serif); margin: 26px 0 6px; }
+  .draft[lang="hi"] h2, .draft[lang="hi"] h3 { font-family: var(--dev-serif); }
+  .draft h3 { font: 600 1rem/1.45 var(--serif); margin: 18px 0 4px; }
+  .draft p { margin: 0 0 12px; text-align: justify; }
+  .draft ul { margin: 0 0 12px; padding-left: 1.3em; }
+  .draft li { margin-bottom: 4px; }
+  .ph { background: var(--low-mark); box-shadow: inset 0 -2px 0 var(--low-line); border-radius: 2px; padding: 0 2px; cursor: pointer; font-family: var(--sans); font-size: .88em; font-weight: 600; color: #5c4a00; }
+  .ph:hover { background: #f3d94f; }
+  .draft .caret-end::after { content: ""; display: inline-block; width: 8px; height: 1.05em; margin-left: 3px; vertical-align: -3px; background: var(--seal); animation: blink 1s steps(2) infinite; }
+  .editor { width: 100%; min-height: 70vh; border: 0; resize: none; font: 1rem/1.75 ui-monospace, "Cascadia Mono", Consolas, monospace; color: var(--ink); background: transparent; padding: 0; }
+  .editor:focus { outline: none; }
+  .edit-hint { font-size: var(--t-xs); color: var(--ink-faint); margin: 0 0 14px; padding: 8px 12px; background: var(--bond); border-radius: 6px; }
+  .writing { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px; margin: -10px auto 16px; max-width: 820px; padding: 10px 16px; border-radius: 8px; background: var(--ink); color: #fff; font-size: var(--t-sm); box-shadow: var(--shadow-pop); }
+  .writing .btn { margin-left: auto; color: #fff; border-color: rgba(255,255,255,.3); background: transparent; }
+  .writing .spin { border-color: rgba(255,255,255,.3); border-top-color: #fff; }
+  .phcount { font-size: var(--t-xs); color: var(--low); font-weight: 600; }
+
+  .state { padding: 80px 20px; text-align: center; color: var(--ink-soft); }
+
+  @media (max-width: 1000px) {
+    .describe { grid-template-columns: 1fr; }
+    body.ws-page { height: auto; overflow: visible; display: block; }
+    .ws2 { display: block; }
+    .pane { overflow: visible; padding: 16px 10px 30px; }
+    .side2 { border-left: 0; border-top: 1px solid var(--rule); }
+    .dbar-tools { margin-left: 0; width: 100%; }
+    .title-in { max-width: none; }
+  }
+  @media print {
+    .topbar, .dbar, .side2, .writing, .edit-hint, .stepper { display: none !important; }
+    body.ws-page { height: auto; overflow: visible; display: block; background: #fff; }
+    .ws2 { display: block; } .pane { overflow: visible; padding: 0; }
+    .draft-sheet { box-shadow: none; border: 0; padding: 0; max-width: none; }
+    .ph { background: none; box-shadow: none; border-bottom: 1px solid #999; }
+  }
+</style>
+</head>
+<body>
+<header id="topbar" class="topbar"></header>
+<main class="page" id="page"><div class="wrap state">Loading…</div></main>
+
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(async function () {
+  "use strict";
+  const { el } = LG;
+  const user = await LG.requireUser();
+  LG.topbar(user, "draft");
+  const page = document.getElementById("page");
+  let TYPES = [];
+  try { TYPES = await LG.api("/api/draft-types"); } catch (err) { page.replaceChildren(el("div", { class: "wrap state" }, err.message)); return; }
+  const typeOf = (v) => TYPES.find((t) => t.value === v);
+
+  // Everything the user has entered so far (kept in the browser while they work)
+  const W = { type: null, fields: {}, description: "", language: "en", favour: null, answers: [], questions: null, title: null };
+  try { Object.assign(W, JSON.parse(sessionStorage.getItem("lg_draft_wip") || "{}")); } catch (_) {}
+  const saveWip = () => { try { sessionStorage.setItem("lg_draft_wip", JSON.stringify(W)); } catch (_) {} };
+
+  const EXAMPLES = {
+    rental: "I'm renting my 2BHK flat in Baner, Pune to Meera Shah from 1 December for 11 months. Rent is ₹20,000 a month and the deposit is ₹40,000. She can't leave in the first 3 months, after that one month's notice. I pay society maintenance, she pays electricity.",
+    nda: "We're a startup sharing our product designs with a manufacturer, Apex Plastics, to get a quote. They must keep everything confidential for 2 years and can't use the designs for anyone else.",
+    freelance: "I'm a freelance designer making a logo and brand guide for Chai Point Cafe. Fee ₹45,000, half upfront, rest on delivery by 15 January. Two rounds of changes included. They own the final logo after full payment.",
+    service: "Our company provides IT support to Sharma Traders: helpdesk on weekdays, monthly maintenance, response within 4 hours. ₹30,000 a month for 12 months, payment within 15 days of invoice.",
+    offer_letter: "Offer to Rahul Verma as Junior Developer at our Noida office, joining 2 January, CTC ₹6 lakh. Six months probation, 30 days notice after confirmation. No bond.",
+    legal_notice: "My landlord Mr. Suresh Gupta hasn't returned my ₹50,000 deposit for the flat in Indirapuram since I moved out on 30 June, even though I left it in good condition. I want it back within 15 days.",
+    custom: "Describe the document you need: who is involved, what each side must do, money, dates, and anything you're worried about.",
+  };
+
+  const route = () => {
+    const id = decodeURIComponent((location.hash || "").slice(1));
+    if (id && /^[0-9a-f-]{32,36}$/i.test(id)) return openDraft(id);
+    if (W.type && typeOf(W.type) && location.hash === "#describe") return showDescribe();
+    showTypes();
+  };
+  addEventListener("hashchange", route);
+
+  function wsMode(on) { document.body.classList.toggle("ws-page", on); }
+  function stepper(n) {
+    const steps = ["Choose a type", "Describe it", "Review and edit"];
+    return el("ol", { class: "stepper", "aria-label": "Steps" }, steps.map((s, i) => {
+      const cls = i + 1 === n ? "is-now" : i + 1 < n ? "is-done" : "";
+      const inner = [el("span", { class: "n" }, i + 1 < n ? "✓" : i + 1), s];
+      return el("li", { class: cls }, i + 1 < n && i < 2 ? el("button", { type: "button", onclick: () => (i === 0 ? (location.hash = "") : (location.hash = "describe")) }, inner) : inner);
+    }));
+  }
+
+  // ======================================================= step 1: types
+  async function showTypes() {
+    wsMode(false);
+    const recent = el("section", { class: "recent", hidden: true }, el("h2", {}, "Your drafts"), el("ul", { class: "rlist", id: "rlist" }));
+    page.replaceChildren(el("div", { class: "wrap" },
+      stepper(1),
+      el("div", { class: "intro" }, el("h1", { class: "h1" }, "Draft a document"),
+        el("p", { class: "lede" }, "Say or type what you need in your own words. LexiGuard writes a first draft with the usual clauses, leaves blanks for anything you haven't said, and lets you edit, check and download it.")),
+      el("div", { class: "types" }, TYPES.map((t) => el("button", { class: "tcard", type: "button", onclick: () => { if (W.type !== t.value) Object.assign(W, { type: t.value, fields: {}, favour: null, answers: [], questions: null, title: null }); saveWip(); location.hash = "describe"; } },
+        el("strong", {}, t.label), el("span", {}, t.hint),
+        t.fields.length ? el("em", {}, "Asks for: " + t.fields.slice(0, 4).map((f) => f.label.toLowerCase()).join(", ") + (t.fields.length > 4 ? "…" : "")) : null))),
+      recent));
+    try {
+      const list = await LG.api("/api/drafts");
+      if (!list.length) return;
+      recent.hidden = false;
+      const ul = document.getElementById("rlist");
+      ul.replaceChildren(...list.slice(0, 12).map((d) => el("li", { class: "ritem" },
+        el("div", {}, el("a", { href: `draft.html#${d.id}` }, d.title), el("p", {}, `${d.type_label}${d.language === "hi" ? ", Hindi" : ""}. Edited ${LG.fmtDate(d.updated_at, true)}`)),
+        el("span", { class: "tiny faint" }, ""),
+        el("button", { class: "btn btn-quiet btn-icon", type: "button", "aria-label": `Delete ${d.title}`, title: "Delete",
+          onclick: async (e) => { e.preventDefault(); if (!(await LG.confirm("Delete this draft?", `"${d.title}" and its earlier versions will be deleted.`))) return;
+            try { await LG.api(`/api/drafts/${d.id}`, { method: "DELETE" }); e.target.closest("li").remove(); LG.toast("Draft deleted"); if (!ul.children.length) recent.hidden = true; } catch (err) { LG.toast(err.message, { error: true }); } } }, LG.icon("trash")))));
+    } catch (_) {}
+  }
+
+  // ===================================================== step 2: describe
+  function showDescribe() {
+    wsMode(false);
+    const t = typeOf(W.type);
+    const desc = el("textarea", { class: "input desc", id: "desc", placeholder: EXAMPLES[t.value] || "", "aria-label": "Describe the document" });
+    desc.value = W.description || "";
+    const count = el("span", {}, "");
+    const updCount = () => { const n = desc.value.trim() ? desc.value.trim().split(/\s+/).length : 0; count.textContent = n ? `${n} words` : ""; };
+    desc.addEventListener("input", () => { W.description = desc.value; saveWip(); updCount(); });
+    updCount();
+
+    // speaking
+    let speakLang = "auto";
+    const mic = el("button", { class: "mic", type: "button", "aria-label": "Start speaking", title: "Speak" }, LG.icon("mic"));
+    const sTitle = el("strong", {}, "Speak instead of typing");
+    const sSub = el("span", {}, "Describe it out loud, in English, Hindi or a mix. You can edit the text afterwards.");
+    const live = el("div", { class: "live", "aria-live": "polite" });
+    const langSeg = el("div", { class: "segmented", role: "group", "aria-label": "Language you'll speak" },
+      [["auto", "Mixed"], ["en", "English"], ["hi", "हिंदी"]].map(([v, l]) => el("button", { type: "button", "aria-pressed": String(v === speakLang),
+        onclick: (e) => { speakLang = v; langSeg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b === e.currentTarget))); } }, l)));
+    const rec = LG.recorder({
+      language: () => speakLang,
+      onText: (txt) => { desc.value = (desc.value.trim() ? desc.value.trimEnd() + "\n\n" : "") + txt; W.description = desc.value; saveWip(); updCount(); live.textContent = ""; LG.toast("Added what you said. Check it and edit anything that's wrong."); },
+      onState: (st, x) => {
+        mic.classList.toggle("is-recording", st === "recording"); mic.classList.toggle("is-working", st === "working");
+        mic.style.setProperty("--lvl", x.level || 0);
+        mic.setAttribute("aria-label", st === "recording" ? "Stop and add the text" : "Start speaking");
+        if (st === "recording") { sTitle.replaceChildren(el("span", { class: "rec-status" }, `Listening ${LG.fmtSec(x.seconds || 0)}`)); sSub.textContent = "Tap the button again when you've finished."; live.textContent = x.interim || ""; }
+        else if (st === "working") { sTitle.textContent = "Turning your speech into text…"; sSub.textContent = "This takes a few seconds."; }
+        else { sTitle.textContent = "Speak instead of typing"; sSub.textContent = "Describe it out loud, in English, Hindi or a mix. You can edit the text afterwards."; }
+      },
+    });
+    mic.addEventListener("click", () => (rec.active ? rec.stop() : rec.start()));
+
+    // details
+    const fields = t.fields.map((f) => {
+      const idf = "f-" + f.key;
+      let input;
+      if (f.type === "select") input = el("select", { class: "input", id: idf }, el("option", { value: "" }, "Not sure yet"), f.options.map((o) => el("option", { value: o }, o)));
+      else if (f.type === "textarea") input = el("textarea", { class: "input", id: idf, placeholder: f.placeholder || "", rows: "2" });
+      else input = el("input", { class: "input", id: idf, type: f.type === "date" ? "date" : "text", placeholder: f.placeholder || "" });
+      input.value = W.fields[f.key] || "";
+      input.addEventListener("input", () => { W.fields[f.key] = input.value; saveWip(); });
+      input.addEventListener("change", () => { W.fields[f.key] = input.value; saveWip(); });
+      return el("div", { class: "field" }, el("label", { class: "label", for: idf }, f.label), input);
+    });
+    const langPick = el("div", { class: "segmented", role: "group", "aria-label": "Draft language" },
+      [["en", "English"], ["hi", "हिंदी"]].map(([v, l]) => el("button", { type: "button", "aria-pressed": String(W.language === v),
+        onclick: (e) => { W.language = v; saveWip(); langPick.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b === e.currentTarget))); } }, l)));
+    const sides = t.sides.length ? el("div", { class: "choices", role: "radiogroup", "aria-label": "Whose side" },
+      [[null, "Balanced"], ...t.sides.map((s) => [s, "Protect the " + s])].map(([v, l]) => el("label", { class: "choice" },
+        el("input", { type: "radio", name: "favour", value: v || "", checked: (W.favour || null) === v || null, onchange: () => { W.favour = v; saveWip(); } }), el("span", {}, l)))) : null;
+
+    const alertBox = el("div", { class: "form-alert", role: "alert" });
+    const qHost = el("div", { id: "qhost" });
+    const goBtn = el("button", { class: "btn btn-primary", type: "button" }, "Continue");
+    goBtn.addEventListener("click", () => prepare(goBtn, alertBox, qHost));
+
+    page.replaceChildren(el("div", { class: "wrap" },
+      stepper(2),
+      el("div", { class: "intro", style: "margin-bottom:24px" }, el("h1", { class: "h1" }, t.label), el("p", { class: "lede" }, "The more you tell it, the fewer blanks you'll have to fill in later. Nothing is made up: anything you don't say is left as a [blank].")),
+      alertBox,
+      el("div", { class: "describe" },
+        el("section", { class: "sheet box" },
+          el("h2", {}, "Describe it in your own words"),
+          el("p", { class: "sub" }, "Who is involved, what each side must do, money, dates, and anything you're worried about."),
+          el("div", { class: "speak" }, mic, el("div", { class: "speak-text" }, sTitle, sSub, live), el("div", { style: "display:grid;gap:4px;justify-items:start" }, el("span", { class: "tiny faint" }, "I'll speak in"), langSeg)),
+          desc, el("div", { class: "desc-foot" }, el("span", {}, "You can type and speak in turns."), count)),
+        el("section", { class: "sheet box" },
+          el("h2", {}, "Key details"),
+          el("p", { class: "sub" }, "Optional. Fill in what you know; skip the rest."),
+          el("div", { class: "details" }, fields),
+          el("div", { class: "opt-row" }, el("span", { class: "label" }, "Write the draft in"), langPick),
+          sides ? el("div", { class: "opt-row" }, el("span", { class: "label" }, "Whose interests should it protect?"), sides) : null)),
+      qHost,
+      el("div", { class: "go-row" }, el("button", { class: "btn btn-quiet", type: "button", onclick: () => (location.hash = "") }, "Choose a different type"), goBtn)));
+    if (W.questions && W.questions.length) renderQuestions(qHost, goBtn);
+    desc.focus();
+  }
+
+  function payload() {
+    const fields = {};
+    Object.entries(W.fields).forEach(([k, v]) => { if (String(v || "").trim()) fields[k] = String(v).trim(); });
+    return { doc_type: W.type, fields, description: (W.description || "").trim(), answers: W.answers.filter((a) => a.answer && a.answer.trim()),
+      language: W.language, favour: W.favour, title: W.title };
+  }
+
+  async function prepare(btn, alertBox, qHost) {
+    alertBox.textContent = "";
+    const p = payload();
+    if (!p.description && !Object.keys(p.fields).length) { alertBox.textContent = "Describe the document, or fill in a few details, first."; document.getElementById("desc").focus(); return; }
+    if (W.questions) return write(btn);   // questions already shown: this click writes the draft
+    btn.classList.add("is-busy"); btn.disabled = true;
+    try {
+      const r = await LG.api("/api/drafts/questions", { method: "POST", json: p });
+      W.title = r.title || null;
+      W.questions = r.questions || [];
+      W.answers = W.questions.map((q) => ({ question: q.question, answer: "" }));
+      saveWip();
+      if (!W.questions.length) return write(btn);
+      renderQuestions(qHost, btn);
+      qHost.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (err) {
+      alertBox.textContent = err.message; alertBox.scrollIntoView({ behavior: "smooth", block: "center" });
+    } finally { btn.classList.remove("is-busy"); btn.disabled = false; }
+  }
+
+  function renderQuestions(host, btn) {
+    host.replaceChildren(el("section", { class: "sheet questions", "aria-label": "A few more details" },
+      el("h2", { class: "h3" }, "A few more details would make the draft complete"),
+      el("p", { class: "muted small", style: "margin:4px 0 6px" }, "Answer what you can. Anything you leave empty becomes a [blank] in the draft."),
+      W.questions.map((q, i) => {
+        const inp = el("input", { class: "input", id: "q-" + i, placeholder: q.hint ? "For example: " + q.hint : "" });
+        inp.value = (W.answers[i] && W.answers[i].answer) || "";
+        inp.addEventListener("input", () => { W.answers[i] = { question: q.question, answer: inp.value }; saveWip(); });
+        inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); const n = document.getElementById("q-" + (i + 1)); n ? n.focus() : btn.click(); } });
+        return el("div", { class: "q" }, el("label", { for: "q-" + i }, q.question), inp);
+      })));
+    btn.textContent = "Write the draft";
+    setTimeout(() => document.getElementById("q-0")?.focus({ preventScroll: true }), 300);
+  }
+
+  async function write(btn) {
+    btn.classList.add("is-busy"); btn.disabled = true;
+    showWorkspace({ id: null, title: W.title || typeOf(W.type).label, language: W.language, content: "", notes: "", versions: [], doc_type: W.type, type_label: typeOf(W.type).label }, true);
+    const D = current;
+    const ctrl = new AbortController(); D.abort = ctrl;
+    try {
+      const { headers } = await LG.streamPost("/api/drafts", payload(), (text, done) => {
+        const [doc, notes] = text.split("---NOTES---");
+        D.data.content = doc; D.data.notes = notes || "";
+        paintDraft(!done); paintNotes();
+      }, ctrl.signal);
+      const id = headers.get("X-Draft-Id");
+      sessionStorage.removeItem("lg_draft_wip");
+      Object.assign(W, { type: null, fields: {}, description: "", answers: [], questions: null, title: null });
+      history.replaceState(null, "", `draft.html#${id}`);
+      const saved = await LG.api(`/api/drafts/${id}`);
+      D.data = saved; D.writing = false; D.abort = null; showWriting(null); setBusy(false); paintAll();
+      document.getElementById("pane").scrollTo({ top: 0, behavior: "smooth" }); scrollTo({ top: 0, behavior: "smooth" });
+      document.querySelector(".title-in").value = saved.title || "";
+      LG.toast("Draft written. Fill in the yellow blanks, then download or check it.", { ms: 5000 });
+    } catch (err) {
+      D.writing = false; showWriting(null); setBusy(false);
+      if (err.name === "AbortError") { LG.toast("Stopped. Your description is still saved."); location.hash = "describe"; return; }
+      LG.toast(err.message || "The draft couldn't be written.", { error: true, ms: 8000 });
+      location.hash = "describe";
+    }
+  }
+
+  // ==================================================== step 3: workspace
+  let current = null;
+  async function openDraft(id) {
+    if (current && current.data.id === id && document.getElementById("draft")) return;
+    page.replaceChildren(el("div", { class: "wrap state" }, "Opening the draft…"));
+    try { showWorkspace(await LG.api(`/api/drafts/${encodeURIComponent(id)}`), false); }
+    catch (err) { wsMode(false); page.replaceChildren(el("div", { class: "wrap state" }, el("h1", { class: "h2" }, err.status === 404 ? "Draft not found" : "Couldn't open the draft"), el("p", {}, err.message), el("a", { class: "btn btn-primary", href: "draft.html" }, "Start a new draft"))); }
+  }
+
+  function showWorkspace(data, writing) {
+    wsMode(true);
+    current = { data, writing, editing: false, saveTimer: null };
+    const D = current;
+    const title = el("input", { class: "title-in", value: data.title || "", "aria-label": "Draft title", maxlength: "200" });
+    title.addEventListener("change", () => save({ title: title.value }));
+    const saveState = el("span", { class: "save-state", id: "save-state", "aria-live": "polite" });
+
+    const dl = el("div", { class: "menu-wrap" });
+    const dlBtn = el("button", { class: "btn btn-sm", type: "button", "aria-haspopup": "menu" }, LG.icon("download"), "Download");
+    const dlMenu = el("div", { class: "menu", role: "menu" },
+      el("button", { type: "button", role: "menuitem", onclick: () => exportAs("docx") }, "Word document (.docx)"),
+      el("button", { type: "button", role: "menuitem", onclick: () => exportAs("pdf") }, data.language === "hi" ? "PDF (print and save)" : "PDF"),
+      el("button", { type: "button", role: "menuitem", onclick: () => window.print() }, "Print"),
+      el("button", { type: "button", role: "menuitem", onclick: copyText }, "Copy text"));
+    dl.append(dlBtn, dlMenu);
+    dlBtn.addEventListener("click", (e) => { e.stopPropagation(); dlMenu.classList.toggle("is-open"); });
+    document.addEventListener("click", () => dlMenu.classList.remove("is-open"));
+
+    const editBtn = el("button", { class: "btn btn-sm", type: "button", id: "edit-btn", onclick: toggleEdit }, LG.icon("edit"), "Edit text");
+    const checkBtn = el("button", { class: "btn btn-sm btn-primary", type: "button", id: "check-btn", onclick: checkDraft }, "Check for red flags");
+
+    const bar = el("div", { class: "dbar" },
+      el("button", { class: "back", type: "button", title: "All drafts", "aria-label": "Back to all drafts", onclick: () => { if (D.abort) D.abort.abort(); location.href = "draft.html"; } }, LG.icon("back")),
+      title, saveState,
+      el("div", { class: "dbar-tools" }, el("span", { class: "phcount", id: "phcount" }), editBtn, dl, checkBtn));
+
+    // change requests
+    const instr = el("textarea", { class: "input", id: "instr", placeholder: "For example: make the notice period two months, and add a clause about pets", "aria-label": "Change you want" });
+    instr.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); revise(instr.value); } });
+    const mic = el("button", { class: "mic", type: "button", "aria-label": "Speak the change", title: "Speak the change" }, LG.icon("mic"));
+    const micHint = el("p", { class: "hint", style: "margin:6px 0 0" }, "Ctrl + Enter to apply. You can also speak the change.");
+    const rec = LG.recorder({
+      language: () => (data.language === "hi" ? "hi" : "auto"),
+      onText: (txt) => { instr.value = (instr.value.trim() ? instr.value.trimEnd() + " " : "") + txt; instr.focus(); },
+      onState: (st, x) => {
+        mic.classList.toggle("is-recording", st === "recording"); mic.classList.toggle("is-working", st === "working"); mic.style.setProperty("--lvl", x.level || 0);
+        micHint.replaceChildren(st === "recording" ? el("span", { class: "rec-status" }, `Listening ${LG.fmtSec(x.seconds || 0)}. Tap again to finish.`) : st === "working" ? "Turning your speech into text…" : "Ctrl + Enter to apply. You can also speak the change.");
+      },
+    });
+    mic.addEventListener("click", () => (rec.active ? rec.stop() : rec.start()));
+    const applyBtn = el("button", { class: "btn btn-primary", type: "button", id: "apply", onclick: () => revise(instr.value) }, "Apply change");
+    const QUICK = ["Make it more balanced", "Use simpler language", "Add a dispute resolution clause", "Add a clause on late payment", "Check the clause numbering", data.language === "hi" ? "Rewrite it in English" : "Rewrite it in Hindi"];
+
+    const side = el("aside", { class: "side2", "aria-label": "Changes and notes" },
+      el("section", { class: "side-sec change-box" }, el("h2", {}, "Ask for changes"), instr, el("div", { class: "change-row" }, mic, applyBtn), micHint,
+        el("div", { class: "chips" }, QUICK.map((q) => el("button", { class: "chip-btn", type: "button", onclick: () => revise(q) }, q)))),
+      el("section", { class: "side-sec notes", id: "notes-sec" }),
+      el("section", { class: "side-sec", id: "versions-sec" }),
+      el("section", { class: "side-sec" }, el("p", { class: "tiny faint", style: "margin:0" }, "A draft written with AI can contain mistakes. Read it fully, fill in every blank, and have a lawyer review it before anyone signs.")));
+
+    const sheet = el("article", { class: "sheet draft-sheet" }, el("div", { class: "draft", id: "draft", lang: data.language === "hi" ? "hi" : "en" }));
+    const pane = el("section", { class: "pane", id: "pane" }, el("div", { id: "writing-host" }), sheet);
+    page.replaceChildren(bar, el("div", { class: "ws2" }, pane, side));
+    paintAll();
+    if (writing) { showWriting("Writing your draft…"); setBusy(true); }
+  }
+
+  function showWriting(msg) {
+    const host = document.getElementById("writing-host");
+    if (!host) return;
+    if (!msg) { host.replaceChildren(); return; }
+    host.replaceChildren(el("div", { class: "writing", role: "status" }, el("span", { class: "spin", "aria-hidden": "true" }), msg,
+      el("button", { class: "btn btn-sm", type: "button", onclick: () => current.abort && current.abort.abort() }, "Stop")));
+  }
+  function setBusy(on) {
+    ["apply", "check-btn", "edit-btn"].forEach((id) => { const b = document.getElementById(id); if (b) b.disabled = on; });
+    document.querySelectorAll(".chip-btn").forEach((b) => (b.disabled = on));
+  }
+
+  // light Markdown -> DOM (safe: text nodes only)
+  function inlineDraft(text) {
+    const out = [];
+    text.split(/(\*\*[^*]+\*\*)/).forEach((part) => {
+      if (!part) return;
+      const bold = /^\*\*[^*]+\*\*$/.test(part);
+      const body = bold ? part.slice(2, -2) : part;
+      const pieces = body.split(/(\[[^\]\n]{1,80}\])/).filter(Boolean).map((p) =>
+        /^\[[^\]]+\]$/.test(p) ? el("span", { class: "ph", title: "Click to fill this in", "data-ph": p }, p.slice(1, -1)) : document.createTextNode(p));
+      out.push(bold ? el("strong", {}, pieces) : pieces);
+    });
+    return out;
+  }
+  function renderDraft(md) {
+    const frag = document.createDocumentFragment();
+    let list = null;
+    for (const raw of (md || "").replace(/\r/g, "").split("\n")) {
+      const line = raw.trimEnd();
+      if (!line.trim()) { list = null; continue; }
+      let m;
+      if ((m = line.match(/^#\s+(.*)/))) { list = null; frag.append(el("h1", {}, inlineDraft(m[1].replace(/\*\*/g, "")))); }
+      else if ((m = line.match(/^##\s+(.*)/))) { list = null; frag.append(el("h2", {}, inlineDraft(m[1].replace(/\*\*/g, "")))); }
+      else if ((m = line.match(/^###\s+(.*)/))) { list = null; frag.append(el("h3", {}, inlineDraft(m[1]))); }
+      else if ((m = line.match(/^\s*[-*•]\s+(.*)/))) { if (!list) { list = el("ul"); frag.append(list); } list.append(el("li", {}, inlineDraft(m[1]))); }
+      else { list = null; frag.append(el("p", {}, inlineDraft(line.trim()))); }
+    }
+    return frag;
+  }
+  function paintDraft(streaming) {
+    const host = document.getElementById("draft");
+    if (!host || current.editing) return;
+    const md = (current.data.content || "").trim();
+    host.replaceChildren(md ? renderDraft(md) : el("p", { class: "muted" }, "…"));
+    if (streaming && host.lastElementChild) host.lastElementChild.classList.add("caret-end");
+    const n = (md.match(/\[[^\]\n]{1,80}\]/g) || []).length;
+    const pc = document.getElementById("phcount");
+    if (pc) pc.textContent = n ? `${n} blank${n === 1 ? "" : "s"} to fill in` : "";
+    if (streaming) { const p = document.getElementById("pane"); const nearEnd = p.scrollHeight - p.scrollTop - p.clientHeight < 260; if (nearEnd) p.scrollTop = p.scrollHeight; }
+  }
+  function paintNotes() {
+    const sec = document.getElementById("notes-sec");
+    if (!sec) return;
+    const items = (current.data.notes || "").split("\n").map((s) => s.replace(/^\s*[-*•]\s*/, "").trim()).filter(Boolean);
+    sec.hidden = !items.length;
+    sec.replaceChildren(el("h2", {}, "Before you sign"), el("ul", { lang: current.data.language === "hi" ? "hi" : "en" }, items.map((i) => el("li", {}, i.replace(/\*\*/g, "")))));
+  }
+  function paintVersions() {
+    const sec = document.getElementById("versions-sec");
+    if (!sec) return;
+    const v = current.data.versions || [];
+    sec.hidden = !v.length;
+    sec.replaceChildren(el("h2", {}, "Earlier versions"), el("ul", { class: "vlist" }, v.slice().reverse().map((x) => el("li", {},
+      el("span", { title: x.label }, `${LG.fmtDate(x.at, true)}: ${x.label || "Earlier version"}`),
+      el("button", { class: "btn btn-quiet btn-sm", type: "button", onclick: () => restore(x.index) }, "Restore")))));
+  }
+  function paintAll() { paintDraft(false); paintNotes(); paintVersions(); wirePlaceholders(); }
+
+  function wirePlaceholders() {
+    const host = document.getElementById("draft");
+    if (!host || host.dataset.wired) return;
+    host.dataset.wired = "1";
+    host.addEventListener("click", (e) => {
+      const ph = e.target.closest(".ph");
+      if (!ph || current.writing) return;
+      toggleEdit(true);
+      const ta = document.getElementById("editor"), i = ta.value.indexOf(ph.dataset.ph);
+      if (i >= 0) { ta.focus(); ta.setSelectionRange(i, i + ph.dataset.ph.length); const lines = ta.value.slice(0, i).split("\n").length; ta.scrollTop = Math.max(0, lines * 28 - 200); }
+    });
+  }
+
+  // ---------------------------------------------------------------- editing
+  function toggleEdit(forceOn) {
+    const D = current, host = document.getElementById("draft"), btn = document.getElementById("edit-btn");
+    if (D.writing) return;
+    const on = forceOn === true ? true : !D.editing;
+    if (on === D.editing) return;
+    D.editing = on;
+    if (on) {
+      const ta = el("textarea", { class: "editor", id: "editor", spellcheck: "true", "aria-label": "Draft text" });
+      ta.value = D.data.content || "";
+      const grow = () => { ta.style.height = "auto"; ta.style.height = Math.max(ta.scrollHeight, innerHeight * 0.7) + "px"; };
+      ta.addEventListener("input", () => { D.data.content = ta.value; grow(); queueSave(); });
+      host.replaceChildren(el("p", { class: "edit-hint" }, "Editing the text. # starts the title, ## a clause heading, - a list item, and [square brackets] mark a blank. Changes save automatically."), ta);
+      requestAnimationFrame(grow);
+      btn.replaceChildren(LG.icon("eye"), "Preview");
+    } else {
+      flushSave();
+      host.dataset.wired = ""; paintAll();
+      btn.replaceChildren(LG.icon("edit"), "Edit text");
+    }
+  }
+  function queueSave() {
+    clearTimeout(current.saveTimer);
+    document.getElementById("save-state").textContent = "Editing…";
+    current.saveTimer = setTimeout(() => save({ content: current.data.content }), 900);
+  }
+  function flushSave() { if (current.saveTimer) { clearTimeout(current.saveTimer); current.saveTimer = null; save({ content: current.data.content }); } }
+  async function save(body) {
+    const D = current;
+    if (!D.data.id) return;
+    const st = document.getElementById("save-state");
+    st.textContent = "Saving…";
+    try { await LG.api(`/api/drafts/${D.data.id}`, { method: "PUT", json: body }); st.textContent = "Saved"; if (body.title) D.data.title = body.title; }
+    catch (err) { st.textContent = "Not saved"; LG.toast(err.message, { error: true, action: "Retry", onAction: () => save(body) }); }
+  }
+  addEventListener("beforeunload", (e) => { if (current && current.saveTimer) { flushSave(); e.preventDefault(); } });
+
+  // ---------------------------------------------------------------- AI change
+  async function revise(text) {
+    const D = current;
+    text = (text || "").trim();
+    if (!text || D.writing || !D.data.id) return;
+    if (D.editing) toggleEdit(false);
+    flushSave();
+    const before = D.data.content;
+    D.writing = true; setBusy(true); showWriting("Rewriting the draft…");
+    const ctrl = new AbortController(); D.abort = ctrl;
+    try {
+      let changes = "";
+      await LG.streamPost(`/api/drafts/${D.data.id}/revise`, { instruction: text }, (sofar, done) => {
+        const [doc, ch] = sofar.split("---CHANGES---");
+        changes = (ch || "").trim();
+        if (doc.trim().length > 40) { D.data.content = doc; paintDraft(!done); }
+      }, ctrl.signal);
+      D.data = await LG.api(`/api/drafts/${D.data.id}`);
+      document.getElementById("instr").value = "";
+      paintAll();
+      LG.toast(changes || "Change applied.", { action: "Undo", onAction: () => restore((D.data.versions || []).length - 1), ms: 7000 });
+    } catch (err) {
+      D.data.content = before; paintDraft(false);
+      if (err.name !== "AbortError") LG.toast(err.message || "The change couldn't be made.", { error: true, ms: 8000 });
+    } finally { D.writing = false; setBusy(false); showWriting(null); }
+  }
+  async function restore(index) {
+    try { current.data = await LG.api(`/api/drafts/${current.data.id}/restore/${index}`, { method: "POST" }); paintAll(); LG.toast("Earlier version restored. The version you replaced is in the list too."); }
+    catch (err) { LG.toast(err.message, { error: true }); }
+  }
+
+  // ---------------------------------------------------------------- export / check
+  async function exportAs(fmt) {
+    const D = current;
+    flushSave();
+    if (fmt === "pdf" && D.data.language === "hi") { LG.toast("Choose 'Save as PDF' as the printer to keep the Hindi text exact."); setTimeout(() => window.print(), 400); return; }
+    location.href = `/api/drafts/${D.data.id}/export?format=${fmt}`;
+  }
+  async function copyText() {
+    try { await navigator.clipboard.writeText((current.data.content || "").replace(/\*\*/g, "").replace(/^#+\s*/gm, "")); LG.toast("Draft copied"); }
+    catch (_) { LG.toast("Couldn't copy. Use Edit text and copy from there.", { error: true }); }
+  }
+  async function checkDraft() {
+    const D = current, b = document.getElementById("check-btn");
+    flushSave();
+    b.classList.add("is-busy"); b.disabled = true;
+    try { const r = await LG.api(`/api/drafts/${D.data.id}/check`, { method: "POST" }); location.href = `review.html#${encodeURIComponent(r.contract_id)}`; }
+    catch (err) { LG.toast(err.message, { error: true }); b.classList.remove("is-busy"); b.disabled = false; }
+  }
+
+  route();
+})();
+</script>
+</body>
+</html>

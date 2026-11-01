@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Check a document — LexiGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&family=Schibsted+Grotesk:wght@400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .page { padding: 36px 0 80px; }
+  .intro { margin-bottom: 30px; }
+  .intro .lede { margin-top: 10px; font-size: var(--t-md); }
+  .grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(24px, 4vw, 48px); align-items: start; }
+
+  .drop { position: relative; min-height: 420px; display: grid; place-items: center; text-align: center; padding: 40px 28px; border: 2px dashed var(--rule-strong); border-radius: 4px; background: repeating-linear-gradient(180deg, transparent 0 31px, rgba(27,35,64,.045) 31px 32px), var(--sheet); transition: border-color .15s, background-color .15s; cursor: pointer; }
+  .drop:hover, .drop.is-over { border-color: var(--seal); }
+  .drop.is-over { background-color: var(--seal-wash); }
+  .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .drop-art { width: 64px; height: 64px; margin: 0 auto 18px; color: var(--seal); }
+  .drop h2 { font: 600 var(--t-xl)/1.3 var(--serif); margin: 0 0 8px; }
+  .drop p { margin: 0; color: var(--ink-soft); }
+  .drop .btn { margin-top: 22px; pointer-events: none; }
+
+  .file-card { display: none; align-items: center; gap: 16px; padding: 18px 20px; margin-top: 14px; }
+  .file-card.is-on { display: flex; }
+  .file-card svg { width: 30px; height: 30px; color: var(--seal); flex: none; }
+  .file-card strong { display: block; font-family: var(--serif); overflow-wrap: anywhere; }
+  .file-card .btn { margin-left: auto; }
+
+  .opts h2 { font: 600 var(--t-md)/1.3 var(--sans); margin: 0 0 12px; }
+  .types { display: grid; gap: 6px; margin: 0 0 26px; padding: 0; border: 0; }
+  .type { position: relative; display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 2px 12px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+  .type:hover { border-color: var(--rule-strong); }
+  .type input { margin: 3px 0 0; width: 16px; height: 16px; accent-color: var(--seal); grid-row: span 2; }
+  .type strong { font-weight: 600; font-size: var(--t-sm); }
+  .type span { font-size: var(--t-xs); color: var(--ink-faint); }
+  .type:has(input:checked) { border-color: var(--seal); box-shadow: inset 3px 0 0 var(--seal); }
+  .sides { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
+  .submit-row .btn { width: 100%; min-height: 52px; font-size: var(--t-md); }
+  .fine { margin-top: 14px; font-size: var(--t-xs); color: var(--ink-faint); }
+  .form-alert { margin-bottom: 16px; }
+
+  /* progress + rejection replace the drop zone */
+  .work { padding: 34px 36px; min-height: 420px; }
+  .work .h2 { margin-bottom: 6px; overflow-wrap: anywhere; }
+  .steps { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 2px; }
+  .step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 0; color: var(--ink-faint); }
+  .step .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--rule-strong); display: grid; place-items: center; }
+  .step.is-now { color: var(--ink); font-weight: 600; }
+  .step.is-now .dot { border-color: var(--seal); border-top-color: transparent; animation: spin .8s linear infinite; }
+  .step.is-done { color: var(--ink-soft); }
+  .step.is-done .dot { background: var(--seal); border-color: var(--seal); color: #fff; }
+  .step.is-done .dot svg { width: 14px; height: 14px; }
+  .reject .stamp { margin: 6px 0 26px; }
+  .reject ul { margin: 16px 0 26px; padding-left: 1.1em; color: var(--ink-soft); display: grid; gap: 6px; font-size: var(--t-sm); }
+  .reject-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .drop { min-height: 260px; } }
+</style>
+</head>
+<body>
+<header id="topbar" class="topbar"></header>
+<main class="page">
+  <div class="wrap">
+    <div class="intro">
+      <h1 class="h1">Check a document</h1>
+      <p class="lede">Upload the file, say what kind of document it is and whose side you're on. It's saved to your documents when it's done.</p>
+    </div>
+    <div class="grid">
+      <section id="left" aria-label="File">
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+          <div>
+            <svg class="drop-art" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M18 6h20l12 12v40H18z" stroke-linejoin="round"/><path d="M38 6v12h12" stroke-linejoin="round"/><path d="M25 32h18M25 40h18M25 48h11" stroke-linecap="round"/><path d="M24 31.5h19" stroke="#F7C9CB" stroke-width="5" opacity=".9"/></svg>
+            <h2>Drop your document here</h2>
+            <p>PDF, Word (.docx) or text file, up to <span id="maxmb">10</span> MB</p>
+            <span class="btn">Choose a file</span>
+          </div>
+        </label>
+        <div class="sheet file-card" id="file-card" aria-live="polite">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 3h7l5 5v13H7zM14 3v5h5" stroke-linejoin="round"/></svg>
+          <div><strong id="file-name"></strong><span class="tiny faint" id="file-size"></span></div>
+          <button class="btn btn-sm" type="button" id="replace">Choose another</button>
+        </div>
+      </section>
+
+      <section class="opts" aria-label="Options">
+        <div class="form-alert" id="alert" role="alert"></div>
+        <h2 id="types-h">What is it?</h2>
+        <fieldset class="types" id="types" aria-labelledby="types-h"></fieldset>
+        <div id="side-block" hidden>
+          <h2 id="side-h">Whose side are you on?</h2>
+          <div class="sides choices" id="sides" role="radiogroup" aria-labelledby="side-h"></div>
+        </div>
+        <div class="submit-row"><button class="btn btn-primary" id="go" type="button" disabled>Check document</button></div>
+        <p class="fine">The text is sent to an AI service to explain the clauses. Only you can see the result.</p>
+      </section>
+    </div>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(async function () {
+  const { el } = LG;
+  const user = await LG.requireUser();
+  LG.topbar(user, "analyze");
+
+  const fileInput = document.getElementById("file"), drop = document.getElementById("drop"), go = document.getElementById("go");
+  const alertBox = document.getElementById("alert"), left = document.getElementById("left");
+  const card = document.getElementById("file-card");
+  let file = null, types = [], maxMb = 10;
+
+  LG.api("/api/config").then((c) => { maxMb = c.max_upload_mb || 10; document.getElementById("maxmb").textContent = maxMb; }).catch(() => {});
+
+  // ---- document types (from the server, so the list always matches the backend)
+  const typesBox = document.getElementById("types"), sidesBox = document.getElementById("sides"), sideBlock = document.getElementById("side-block");
+  try { types = await LG.api("/api/document-types"); } catch (err) { alertBox.textContent = err.message; }
+  types.forEach((t, i) => typesBox.append(el("label", { class: "type" },
+    el("input", { type: "radio", name: "doc_type", value: t.value, checked: i === 0 || null }),
+    el("strong", {}, t.label), el("span", {}, t.hint))));
+  function renderSides() {
+    const t = types.find((x) => x.value === (typesBox.querySelector("input:checked") || {}).value);
+    sidesBox.replaceChildren();
+    if (!t || !t.perspectives.length || t.perspectives.length < 2) { sideBlock.hidden = true; return; }
+    sideBlock.hidden = false;
+    t.perspectives.forEach((p) => sidesBox.append(el("label", { class: "choice" },
+      el("input", { type: "radio", name: "perspective", value: p, checked: p === t.default_perspective || null }), el("span", {}, "The " + p))));
+  }
+  typesBox.addEventListener("change", renderSides);
+  renderSides();
+
+  // ---- file choosing
+  function size(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB"; }
+  function setFile(f) {
+    alertBox.textContent = "";
+    if (!f) return;
+    if (!/\.(pdf|docx|txt)$/i.test(f.name)) { alertBox.textContent = "Choose a PDF, Word (.docx) or text file. Older .doc files need to be saved as .docx first."; return; }
+    if (f.size > maxMb * 1048576) { alertBox.textContent = `That file is ${size(f.size)}. The limit is ${maxMb} MB.`; return; }
+    if (!f.size) { alertBox.textContent = "That file is empty."; return; }
+    file = f;
+    document.getElementById("file-name").textContent = f.name;
+    document.getElementById("file-size").textContent = size(f.size);
+    card.classList.add("is-on"); drop.style.minHeight = "220px";
+    go.disabled = false;
+  }
+  fileInput.addEventListener("change", () => setFile(fileInput.files[0]));
+  document.getElementById("replace").addEventListener("click", () => fileInput.click());
+  ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("is-over"); }));
+  ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("is-over"); }));
+  drop.addEventListener("drop", (e) => setFile(e.dataTransfer.files[0]));
+
+  // ---- running the check
+  const STEPS = ["Reading the file", "Checking it's a legal document", "Finding risky clauses", "Writing plain-English explanations", "Saving to your documents"];
+  let original = null;
+
+  function showProgress() {
+    scrollTo({ top: 0, behavior: "smooth" });
+    original = original || [...left.childNodes];
+    const items = STEPS.map((s) => el("li", { class: "step" }, el("span", { class: "dot" }), s));
+    left.replaceChildren(el("div", { class: "sheet work", "aria-live": "polite" },
+      el("h2", { class: "h2" }, file.name), el("p", { class: "muted" }, "This usually takes under a minute. Long documents take a little longer."),
+      el("ol", { class: "steps" }, items)));
+    let i = 0;
+    const mark = () => items.forEach((li, j) => {
+      li.className = "step " + (j < i ? "is-done" : j === i ? "is-now" : "");
+      li.querySelector(".dot").replaceChildren(j < i ? LG.icon("check") : "");
+    });
+    mark();
+    const timer = setInterval(() => { if (i < STEPS.length - 2) { i++; mark(); } }, 2200);
+    return { done() { clearInterval(timer); i = STEPS.length; mark(); }, stop() { clearInterval(timer); } };
+  }
+  function restore() { if (original) left.replaceChildren(...original); setBusy(false); }
+  function setBusy(b) { go.disabled = b || !file; go.classList.toggle("is-busy", b); typesBox.disabled = b; }
+
+  function showRejected(d) {
+    scrollTo({ top: 0, behavior: "smooth" });
+    const notLegal = d.verdict === "not_legal";
+    left.replaceChildren(el("div", { class: "sheet work reject" },
+      LG.stamp("Void", { size: "lg", landing: true }),
+      el("h2", { class: "h2" }, notLegal ? `This looks like a ${d.detected_label}` : "This doesn't read like a legal document"),
+      el("p", { class: "muted" }, notLegal
+        ? "LexiGuard only checks contracts, offer and joining letters, leases, NDAs and terms of service, so this file wasn't analyzed."
+        : "Few parties, obligations or terms were found, so it wasn't analyzed. If it really is an agreement, choose its type on the right and check it anyway."),
+      d.reasons && d.reasons.length ? el("ul", {}, d.reasons.map((r) => el("li", {}, r))) : null,
+      el("div", { class: "reject-actions" },
+        el("button", { class: "btn", type: "button", onclick: () => { restore(); fileInput.value = ""; fileInput.click(); } }, "Choose another file"),
+        d.can_override ? el("button", { class: "btn btn-primary", type: "button", onclick: () => run(true) }, "Check it anyway") : null)));
+  }
+
+  async function run(force) {
+    if (!file) return;
+    alertBox.textContent = "";
+    setBusy(true);
+    const prog = showProgress();
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("doc_type", (typesBox.querySelector("input:checked") || {}).value || "auto");
+    const side = sidesBox.querySelector("input:checked");
+    if (side) fd.append("perspective", side.value);
+    if (force) fd.append("force", "true");
+    try {
+      const res = await LG.api("/api/analyze", { method: "POST", form: fd });
+      prog.done();
+      setTimeout(() => location.assign(`review.html#${encodeURIComponent(res.contract_id)}`), 450);
+    } catch (err) {
+      prog.stop(); setBusy(false);
+      if (err.status === 422 && err.detail && err.detail.code === "not_legal_document") { showRejected(err.detail); return; }
+      restore();
+      alertBox.textContent = err.message;
+    }
+  }
+  go.addEventListener("click", () => run(false));
+})();
+</script>
+</body>
+</html>

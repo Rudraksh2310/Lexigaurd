@@ -1,0 +1,16 @@
+fastapi>=0.115
+uvicorn[standard]
+python-multipart
+SQLAlchemy>=2.0
+psycopg2-binary
+pypdf
+python-docx
+reportlab
+requests
+python-dotenv
+edge-tts>=7.0
+gTTS
+# optional admin view
+streamlit
+pandas
+plotly

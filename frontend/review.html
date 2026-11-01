@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Document review — LexiGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&family=Schibsted+Grotesk:wght@400..800&family=Noto+Sans+Devanagari:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  :root { --dev: "Noto Sans Devanagari", "Nirmala UI", "Mangal", sans-serif; }
+  [lang="hi"], .is-hi { font-family: var(--sans), var(--dev); }
+
+  /* ======== workspace (desktop): page doesn't scroll, panes do ======== */
+  body.ws-page { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  body.ws-page > .topbar { flex: none; border-bottom-color: var(--rule); }
+  .ws { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+  .docbar { flex: none; display: flex; align-items: center; gap: 14px; padding: 10px var(--gutter); border-bottom: 1px solid var(--rule); background: rgba(255,255,255,.6); }
+  .docbar .back { flex: none; width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-soft); }
+  .docbar .back:hover { background: rgba(27,35,64,.06); color: var(--ink); }
+  .docbar .back svg { width: 18px; height: 18px; }
+  .doc-id { min-width: 0; flex: 1; }
+  .doc-id h1 { font: 600 1.15rem/1.3 var(--serif); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-id p { margin: 1px 0 0; font-size: var(--t-xs); color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .docbar-tools { display: flex; align-items: center; gap: 8px; flex: none; }
+  .menu-wrap { position: relative; }
+  .menu-wrap .menu { min-width: 200px; }
+
+  .ws-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 440px); }
+  .ws-doc { min-height: 0; overflow-y: auto; padding: 26px clamp(16px, 3vw, 44px) 64px; scroll-behavior: smooth; }
+  .ws-doc-in { max-width: 820px; margin: 0 auto; display: grid; gap: 22px; }
+  .ws-panel { min-height: 0; display: flex; flex-direction: column; background: var(--sheet); border-left: 1px solid var(--rule); }
+
+  /* reviewer's note above the document */
+  .note-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px 28px; align-items: center; padding: 24px 28px; border-radius: 6px; }
+  .note-card .stamp { margin: 6px 4px; }
+  .note-card h2 { font: 600 var(--t-md)/1.3 var(--sans); margin: 0 0 6px; }
+  .note-card .summary { margin: 0; color: var(--ink-soft); line-height: 1.6; font-size: var(--t-sm); }
+  .counts { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: var(--t-xs); color: var(--ink-soft); }
+  .note-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
+  .disclaimer { grid-column: 1 / -1; margin: 0; padding-top: 14px; border-top: 1px solid var(--rule); font-size: var(--t-xs); color: var(--ink-faint); }
+
+  .paper { padding: clamp(24px, 4.5vw, 60px) clamp(20px, 5vw, 64px); }
+  .tr-note { font-size: var(--t-xs); color: var(--ink-faint); margin: 0 0 18px; padding: 8px 12px; background: var(--bond); border-radius: 6px; }
+
+  /* panel */
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--rule); padding: 0 10px; flex: none; background: var(--sheet); }
+  .tab { border: 0; background: none; padding: 14px 12px 12px; font-weight: 600; font-size: var(--t-sm); color: var(--ink-faint); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; display: inline-flex; gap: 8px; align-items: center; transition: color .15s, border-color .15s; }
+  .tab:hover { color: var(--ink-soft); }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+  .tab svg { width: 16px; height: 16px; }
+  .tab .count { font-size: var(--t-xs); background: var(--bond); border-radius: 9px; padding: 1px 7px; color: var(--ink-soft); }
+  .tab-doc { display: none; }
+  .view { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .view.is-on { display: flex; }
+
+  .filters { display: flex; gap: 6px; padding: 12px 16px; border-bottom: 1px solid var(--rule); flex: none; flex-wrap: wrap; }
+  .filter { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--rule-strong); border-radius: 16px; padding: 4px 11px; background: var(--sheet); font-size: var(--t-xs); font-weight: 600; cursor: pointer; transition: opacity .15s; }
+  .filter[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+  .sw { width: 11px; height: 11px; border-radius: 2px; }
+  .sw.High { background: var(--high-mark); box-shadow: inset 0 -2px 0 var(--high-line); } .sw.Medium { background: var(--med-mark); box-shadow: inset 0 -2px 0 var(--med-line); } .sw.Low { background: var(--low-mark); box-shadow: inset 0 -2px 0 var(--low-line); }
+  .flag-list { overflow-y: auto; flex: 1; min-height: 0; overscroll-behavior: contain; }
+  .fcard { border-bottom: 1px solid var(--rule); transition: background-color .15s; }
+  .fcard.is-off { display: none; }
+  .fcard.is-active, .fcard:hover { background: #F7F9F6; }
+  .fcard-head { width: 100%; text-align: left; border: 0; background: none; padding: 14px 18px; cursor: pointer; display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 2px 12px; align-items: start; }
+  .fcard-title { font-weight: 600; font-size: var(--t-sm); line-height: 1.35; display: block; }
+  .fcard-sec { font-size: var(--t-xs); color: var(--ink-faint); display: block; margin-top: 1px; }
+  .fcard-q { grid-column: 2 / -1; font: italic 400 var(--t-sm)/1.5 var(--serif); color: var(--ink-soft); margin: 6px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .fcard.is-open .fcard-q { -webkit-line-clamp: unset; }
+  .fcard-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .22s ease; }
+  .fcard-body > div { overflow: hidden; padding: 0 18px 0 56px; }
+  .fcard.is-open .fcard-body { grid-template-rows: 1fr; }
+  .fcard.is-open .fcard-body > div { padding-bottom: 16px; }
+  .explain { margin: 0; display: grid; gap: 10px; font-size: var(--t-sm); }
+  .explain dt { font-weight: 700; font-size: var(--t-xs); color: var(--ink-faint); }
+  .explain dd { margin: 2px 0 0; line-height: 1.6; }
+  .row-actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .none { padding: 28px 22px; color: var(--ink-soft); font-size: var(--t-sm); }
+
+  .chat-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px 10px 18px; border-bottom: 1px solid var(--rule); flex: none; }
+  .chat-head strong { font-size: var(--t-sm); }
+  .chat-head .faint { font-size: var(--t-xs); }
+
+  /* tooltip */
+  .tip { position: fixed; z-index: 60; width: min(380px, calc(100vw - 24px)); max-height: min(70vh, 540px); overflow: auto; background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow-pop); padding: 16px 18px; font-size: var(--t-sm); opacity: 0; transform: translateY(4px); pointer-events: none; transition: opacity .12s, transform .12s; }
+  .tip.is-on { opacity: 1; transform: none; pointer-events: auto; }
+  .tip-item + .tip-item { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--rule); }
+  .tip-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tip-head strong { font: 600 var(--t-md)/1.3 var(--serif); }
+
+  .state { margin: auto; padding: 80px 20px; text-align: center; color: var(--ink-soft); }
+  .state .h2 { color: var(--ink); margin-bottom: 8px; }
+  .skel { background: linear-gradient(90deg, #e6eae4, #f3f5f2, #e6eae4); background-size: 200% 100%; animation: sk 1.2s infinite; border-radius: 6px; }
+  @keyframes sk { to { background-position: -200% 0; } }
+
+  /* ======== narrow screens: normal page with tabs ======== */
+  @media (max-width: 1000px) {
+    body.ws-page { height: auto; overflow: visible; display: block; }
+    .docbar { flex-wrap: wrap; padding: 10px 16px; }
+    .docbar-tools { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+    .ws-body { display: flex; flex-direction: column; }
+    .ws-panel { order: -1; }
+    .ws-doc { overflow: visible; padding: 16px 12px 40px; }
+    .note-card { grid-template-columns: 1fr; padding: 20px; }
+    .ws-panel { border-left: 0; }
+    .tab-doc { display: inline-flex; }
+    .tabs { position: sticky; top: 64px; z-index: 20; border-bottom: 1px solid var(--rule); }
+    .ws-panel { position: sticky; top: 64px; z-index: 20; }
+    .ws-body:not(.show-panel) .ws-panel .view { display: none; }
+    .ws-body.show-panel .ws-doc { display: none; }
+    .ws-body.show-panel .ws-panel { position: static; }
+    .ws-body.show-panel .tabs { position: sticky; }
+    .view.is-on { min-height: calc(100dvh - 64px - 49px); }
+    #view-chat.is-on { height: calc(100dvh - 64px - 49px); }
+  }
+  @media print { .topbar, .docbar, .ws-panel, .note-actions, .tip { display: none !important; } body.ws-page { height: auto; overflow: visible; display: block; } .ws-body { display: block; } .ws-doc { overflow: visible; } .paper { box-shadow: none; border: 0; } }
+</style>
+</head>
+<body class="ws-page">
+<header id="topbar" class="topbar"></header>
+<main class="ws" id="app">
+  <div class="docbar"><div class="doc-id"><div class="skel" style="height:20px;width:260px"></div></div></div>
+  <div class="ws-body"><section class="ws-doc"><div class="ws-doc-in"><div class="skel" style="height:150px"></div><div class="skel" style="height:60vh"></div></div></section><aside class="ws-panel"></aside></div>
+</main>
+<div class="tip" id="tip" role="tooltip" aria-hidden="true"></div>
+
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(async function () {
+  "use strict";
+  const { el } = LG;
+  const user = await LG.requireUser();
+  LG.topbar(user, "documents");
+  const app = document.getElementById("app"), tip = document.getElementById("tip");
+  const visible = { High: true, Medium: true, Low: true };
+  const S = { doc: null, flags: [], marks: {}, pinned: null, hideTimer: null, chatOn: false, sending: null, tr: null, trLoading: false, lastQ: "" };
+  const narrow = () => matchMedia("(max-width: 1000px)").matches;
+  const hi = () => LG.lang() === "hi" && S.tr;
+
+  const id = decodeURIComponent((location.hash || "").slice(1)).trim();
+  if (!id) return showState("No document selected", "Open one from your documents.");
+  try { S.doc = await LG.api(`/api/contracts/${encodeURIComponent(id)}`); }
+  catch (err) { return showState(err.status === 404 ? "Document not found" : "Couldn't open the document", err.status === 404 ? "It may have been deleted, or it belongs to another account." : err.message); }
+  S.flags = S.doc.flags.slice().sort((a, b) => (a.start ?? 1e12) - (b.start ?? 1e12));
+  document.title = `${S.doc.filename} — LexiGuard`;
+
+  function showState(t, m) {
+    app.replaceChildren(el("div", { class: "state" }, el("h1", { class: "h2" }, t), el("p", {}, m), el("a", { class: "btn btn-primary", href: "dashboard.html" }, "Your documents")));
+  }
+
+  // ------------------------------------------------------- text in the chosen language
+  function T(f, key) {
+    if (hi() && S.tr.flags[f.id] && S.tr.flags[f.id][key]) return S.tr.flags[f.id][key];
+    return f[key] || "";
+  }
+  const summaryText = () => (hi() && S.tr.summary) || S.doc.contract_summary || "";
+  const L10 = {
+    en: { mean: "What it means", why: "Why it matters", ask: "What to ask for", listen: "Listen", askBtn: "Ask about this", show: "Show in document", summary: "Listen to summary" },
+    hi: { mean: "इसका मतलब", why: "यह क्यों ज़रूरी है", ask: "क्या माँगें", listen: "सुनें", askBtn: "इसके बारे में पूछें", show: "दस्तावेज़ में देखें", summary: "सारांश सुनें" },
+  };
+  const t = (k) => (hi() ? L10.hi : L10.en)[k];
+
+  // ------------------------------------------------------------------ layout
+  function counts() { const c = { High: 0, Medium: 0, Low: 0 }; S.flags.forEach((f) => c[LG.lvl(f.risk_level)]++); return c; }
+
+  function render() {
+    const c = counts(), overall = LG.lvl(S.doc.overall_risk_score || "Low");
+    const discuss = c.High + c.Medium;
+    const sub = S.flags.length ? (discuss ? `${discuss} clause${discuss === 1 ? "" : "s"} to discuss` : `${S.flags.length} to note`) : "No red flags";
+
+    // top bar for this document
+    const dl = el("div", { class: "menu-wrap" });
+    const dlBtn = el("button", { class: "btn btn-sm", type: "button", "aria-haspopup": "menu", "aria-expanded": "false" }, LG.icon("download"), "Download");
+    const dlMenu = el("div", { class: "menu", role: "menu" },
+      el("a", { role: "menuitem", href: `/api/contracts/${encodeURIComponent(S.doc.id)}/report?format=pdf` }, "PDF report with highlights"),
+      el("a", { role: "menuitem", href: `/api/contracts/${encodeURIComponent(S.doc.id)}/report?format=docx` }, "Word report (.docx)"),
+      el("button", { role: "menuitem", type: "button", onclick: del, style: "color:var(--high)" }, "Delete this document"));
+    dl.append(dlBtn, dlMenu);
+    dlBtn.addEventListener("click", (e) => { e.stopPropagation(); const o = dlMenu.classList.toggle("is-open"); dlBtn.setAttribute("aria-expanded", String(o)); });
+    document.addEventListener("click", () => { dlMenu.classList.remove("is-open"); dlBtn.setAttribute("aria-expanded", "false"); });
+
+    const langSeg = el("div", { class: "segmented", role: "group", "aria-label": "Language", id: "lang" },
+      ["en", "hi"].map((l) => el("button", { type: "button", "data-lang": l, "aria-pressed": String(LG.lang() === l), onclick: () => setLanguage(l) }, l === "en" ? "English" : "हिंदी")));
+
+    const facts = [S.doc.document_label || "Legal document", S.doc.perspective ? `your side: ${S.doc.perspective}` : null, "checked " + LG.fmtDate(S.doc.uploaded_at)].filter(Boolean).join(", ");
+    const docbar = el("div", { class: "docbar" },
+      el("a", { class: "back", href: "dashboard.html", title: "Your documents", "aria-label": "Back to your documents" }, LG.icon("back")),
+      el("div", { class: "doc-id" }, el("h1", { title: S.doc.filename }, S.doc.filename), el("p", {}, LG.cap(facts))),
+      el("div", { class: "docbar-tools" }, langSeg, dl));
+
+    // reviewer's note
+    const note = el("section", { class: "sheet note-card", "aria-label": "Summary" },
+      LG.stamp(overall, { size: "lg", sub, landing: true }),
+      el("div", {},
+        el("h2", {}, S.flags.length ? `${S.flags.length} clause${S.flags.length === 1 ? "" : "s"} flagged` : "No red flags found"),
+        el("p", { class: "summary", id: "summary" }, summaryText()),
+        S.flags.length ? el("div", { class: "counts" }, LG.LEVELS.map((L) => el("span", { class: `lvl ${L}` }, `${c[L]} ${L.toLowerCase()}`))) : null,
+        el("div", { class: "note-actions" }, LG.voiceButton(speakSummary, { label: t("summary") }), el("button", { class: "btn btn-sm btn-quiet", type: "button", onclick: () => { switchView("chat"); } }, LG.icon("chat"), "Ask a question"))),
+      el("p", { class: "disclaimer" }, "Automated decision support, not legal advice. Have a qualified lawyer review anything important before you sign."));
+
+    const paper = el("article", { class: "sheet paper", "aria-label": "Document with highlighted clauses" });
+    if (S.doc.document_text) { const d = renderDoc(S.doc.document_text); wireDoc(d); paper.append(el("div", { id: "tr-note" }), d); }
+    else paper.append(el("p", { class: "muted" }, "This document was checked before highlighting was added, so its text wasn't stored. The flags are listed alongside; upload it again to see it highlighted."));
+
+    const docPane = el("section", { class: "ws-doc", id: "doc-pane" }, el("div", { class: "ws-doc-in" }, note, paper));
+    docPane.addEventListener("scroll", () => { if (tip.classList.contains("is-on")) { const m = S.pinned || document.querySelector("mark.hl.is-active"); m ? placeTip(m) : closeTip(true); } }, { passive: true });
+
+    // panel
+    const tabs = el("div", { class: "tabs", role: "tablist" },
+      el("button", { class: "tab tab-doc", role: "tab", type: "button", "data-view": "doc" }, "Document"),
+      el("button", { class: "tab", role: "tab", type: "button", "data-view": "flags" }, "Red flags", el("span", { class: "count" }, S.flags.length)),
+      el("button", { class: "tab", role: "tab", type: "button", "data-view": "chat" }, LG.icon("chat"), "Ask"));
+    const filters = el("div", { class: "filters", role: "group", "aria-label": "Show risk levels" },
+      LG.LEVELS.map((L) => el("button", { class: "filter", type: "button", "aria-pressed": "true",
+        onclick: (e) => { visible[L] = !visible[L]; e.currentTarget.setAttribute("aria-pressed", String(visible[L])); closeTip(true); applyFilters(); } },
+        el("span", { class: `sw ${L}`, "aria-hidden": "true" }), `${L} ${c[L]}`)));
+    const flagView = el("div", { class: "view", id: "view-flags", role: "tabpanel" }, filters,
+      el("div", { class: "flag-list", id: "flag-list" }, S.flags.length ? S.flags.map(flagCard) : el("p", { class: "none" }, "No red flags were found. That doesn't guarantee the document is fine: ask a question, or have a lawyer look at anything important.")));
+    const panel = el("aside", { class: "ws-panel", "aria-label": "Red flags and questions" }, tabs, flagView, buildChat());
+
+    const body = el("div", { class: "ws-body", id: "body" }, docPane, panel);
+    app.replaceChildren(docbar, body);
+    tabs.addEventListener("click", (e) => { const tb = e.target.closest(".tab"); if (tb) switchView(tb.dataset.view); });
+    switchView(location.search.includes("ask") ? "chat" : narrow() ? "doc" : "flags");
+  }
+
+  function switchView(v) {
+    const body = document.getElementById("body");
+    if (v === "doc" && !narrow()) v = "flags";
+    body.classList.toggle("show-panel", v !== "doc");
+    document.querySelectorAll(".tabs .tab").forEach((tb) => tb.setAttribute("aria-selected", String(tb.dataset.view === v)));
+    document.getElementById("view-flags").classList.toggle("is-on", v === "flags");
+    document.getElementById("view-chat").classList.toggle("is-on", v === "chat");
+    if (v === "chat") { requestAnimationFrame(() => { scrollChat(true); if (!narrow()) document.getElementById("ask-input")?.focus({ preventScroll: true }); }); }
+    if (narrow()) scrollTo({ top: 0 });
+  }
+
+  // ---------------------------------------------------------------- language
+  async function setLanguage(l, initial) {
+    LG.voice.stop();
+    const seg = document.getElementById("lang");
+    const mark = (lang) => seg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+    if (l === "en") { LG.setLang("en"); mark("en"); refreshTexts(); return; }
+    LG.setLang("hi"); mark("hi");
+    if (S.tr && S.tr.complete) { refreshTexts(); return; }
+    if (S.trLoading) return;
+    S.trLoading = true;
+    const hb = seg.querySelector('[data-lang="hi"]');
+    hb.replaceChildren(el("span", { class: "spin", "aria-hidden": "true" }), "हिंदी");
+    seg.querySelectorAll("button").forEach((b) => (b.disabled = true));
+    if (!initial) LG.toast("Translating the explanations into Hindi. The first time takes a few seconds.", { ms: 3500 });
+    try {
+      S.tr = await LG.api(`/api/contracts/${encodeURIComponent(S.doc.id)}/translate`, { method: "POST", json: { lang: "hi" } });
+      if (!S.tr.complete) LG.toast(S.tr.error ? `Part of the Hindi translation didn't finish: ${S.tr.error}` : "Part of the Hindi translation didn't finish. Switch again to retry.", { error: true, ms: 7000 });
+      refreshTexts();
+    } catch (err) {
+      LG.setLang("en"); mark("en"); S.tr = null; refreshTexts();
+      LG.toast(err.message || "The Hindi translation didn't work.", { error: true, ms: 8000 });
+    } finally {
+      S.trLoading = false;
+      hb.replaceChildren("हिंदी");
+      seg.querySelectorAll("button").forEach((b) => (b.disabled = false));
+    }
+  }
+  function refreshTexts() {
+    const sum = document.getElementById("summary");
+    if (sum) { sum.textContent = summaryText(); sum.lang = hi() ? "hi" : "en"; }
+    const note = document.getElementById("tr-note");
+    if (note) note.replaceChildren(hi() ? el("p", { class: "tr-note", lang: "hi" }, "व्याख्याएँ हिंदी में दिखाई जा रही हैं। दस्तावेज़ का पाठ अपनी मूल भाषा में है।") : "");
+    const list = document.getElementById("flag-list");
+    if (list && S.flags.length) {
+      const open = [...list.querySelectorAll(".fcard.is-open")].map((n) => n.id);
+      list.replaceChildren(...S.flags.map(flagCard));
+      open.forEach((i) => { const n = document.getElementById(i); if (n) { n.classList.add("is-open"); n.querySelector(".fcard-head").setAttribute("aria-expanded", "true"); } });
+      applyFilters();
+    }
+    document.querySelectorAll(".note-actions .v-btn .v-label").forEach((s) => (s.textContent = t("summary")));
+    document.querySelectorAll(".note-actions .v-btn").forEach((b) => (b.dataset.label = t("summary")));
+    if (tip.classList.contains("is-on")) closeTip(true);
+    const inp = document.getElementById("ask-input");
+    if (inp) inp.placeholder = hi() ? "इस दस्तावेज़ के बारे में पूछें" : "Ask about this document";
+  }
+  function speakSummary() {
+    const c = counts();
+    if (hi()) return [summaryText(), ...S.flags.filter((f) => f.risk_level === "High").slice(0, 3).map((f) => `${T(f, "category")}: ${T(f, "plain_english_explanation")}`)].join(" ");
+    return [S.doc.contract_summary, S.flags.length ? `There are ${c.High} high, ${c.Medium} medium and ${c.Low} low risk clauses.` : "", ...S.flags.filter((f) => f.risk_level === "High").slice(0, 3).map((f) => `${f.category}: ${f.plain_english_explanation}`)].filter(Boolean).join(" ");
+  }
+  const flagSpeech = (f) => hi()
+    ? `${T(f, "category")}. ${T(f, "plain_english_explanation")} ${T(f, "why_it_matters")} ${t("ask")}: ${T(f, "suggested_action")}`
+    : `${f.category}. ${f.risk_level} risk. ${f.plain_english_explanation || ""} ${f.why_it_matters || ""} What to ask for: ${f.suggested_action || ""}`;
+
+  // ---------------------------------------------------------------- document
+  function renderDoc(text) {
+    const d = el("div", { class: "doc-text", id: "doc" });
+    S.marks = {};
+    for (const r of LG.segments(text, S.flags)) {
+      const chunk = text.slice(r.a, r.b);
+      if (!r.cover.length) { d.append(chunk); continue; }
+      const level = r.cover.reduce((b, i) => (LG.RANK[LG.lvl(S.flags[i].risk_level)] > LG.RANK[b] ? LG.lvl(S.flags[i].risk_level) : b), "Low");
+      const label = r.cover.map((i) => `flag ${i + 1}, ${S.flags[i].category}, ${LG.lvl(S.flags[i].risk_level)} risk`).join("; ");
+      const m = el("mark", { class: `hl ${level}`, tabindex: "0", "data-flags": r.cover.join(","), "aria-label": `${label}. Press Enter for details.` }, chunk);
+      r.cover.forEach((i) => (S.marks[i] = S.marks[i] || []).push(m));
+      d.append(m);
+      r.cover.filter((i) => S.flags[i].end === r.b).forEach((i) => d.append(el("sup", { class: `fn ${LG.lvl(S.flags[i].risk_level)}`, "data-flag": i, "aria-hidden": "true" }, i + 1)));
+    }
+    return d;
+  }
+  function explainList(f) {
+    const isHi = !!hi();
+    return el("dl", { class: "explain", lang: isHi ? "hi" : "en" }, [[t("mean"), T(f, "plain_english_explanation")], [t("why"), T(f, "why_it_matters")], [t("ask"), T(f, "suggested_action")]]
+      .filter(([, v]) => v).map(([k, v]) => el("div", {}, el("dt", {}, k), el("dd", {}, v))));
+  }
+  function askAbout(i) {
+    closeTip(true); switchView("chat");
+    const f = S.flags[i];
+    send(hi() ? `फ़्लैग #${i + 1} (${T(f, "category")}) को आसान शब्दों में समझाइए। क्या यह मेरे लिए अनुचित है, और मैं कौन-सा बेहतर शब्दांकन प्रस्तावित कर सकता हूँ?`
+              : `Explain flag #${i + 1} (${f.category}) in simple words. Is it unfair to me, and what fairer wording can I propose?`);
+  }
+  function tipContent(idxs) {
+    return idxs.sort((a, b) => a - b).map((i) => {
+      const f = S.flags[i], L = LG.lvl(f.risk_level);
+      return el("div", { class: "tip-item" },
+        el("div", { class: "tip-head" }, el("span", { class: `flagno ${L}` }, i + 1), el("strong", { lang: hi() ? "hi" : "en" }, T(f, "category")), el("span", { class: `lvl ${L}` }, `${L} risk`)),
+        explainList(f),
+        el("div", { class: "row-actions" }, LG.voiceButton(() => flagSpeech(f), { label: t("listen") }),
+          el("button", { class: "btn btn-sm btn-quiet", type: "button", onclick: () => askAbout(i) }, LG.icon("chat"), t("askBtn"))));
+    });
+  }
+  function placeTip(target) {
+    const r = target.getClientRects()[0] || target.getBoundingClientRect();
+    const tw = tip.offsetWidth, th = tip.offsetHeight, pad = 12;
+    tip.style.left = Math.min(Math.max(pad, r.left), innerWidth - tw - pad) + "px";
+    let top = r.bottom + 8;
+    if (top + th > innerHeight - pad) top = Math.max(pad, r.top - th - 8);
+    tip.style.top = top + "px";
+  }
+  function openTip(m) {
+    clearTimeout(S.hideTimer);
+    const idxs = m.dataset.flags.split(",").map(Number).filter((i) => visible[LG.lvl(S.flags[i].risk_level)]);
+    if (!idxs.length) return;
+    tip.replaceChildren(...tipContent(idxs));
+    tip.classList.add("is-on"); tip.setAttribute("aria-hidden", "false");
+    placeTip(m); setActive(idxs);
+  }
+  function closeTip(now) {
+    clearTimeout(S.hideTimer);
+    const go = () => { tip.classList.remove("is-on"); tip.setAttribute("aria-hidden", "true"); S.pinned = null; setActive([]); };
+    now ? go() : (S.hideTimer = setTimeout(go, 220));
+  }
+  function setActive(idxs) {
+    document.querySelectorAll(".is-active").forEach((n) => n.classList.remove("is-active"));
+    idxs.forEach((i) => { (S.marks[i] || []).forEach((m) => m.classList.add("is-active")); document.getElementById("fc-" + i)?.classList.add("is-active"); });
+  }
+  tip.addEventListener("mouseenter", () => clearTimeout(S.hideTimer));
+  tip.addEventListener("mouseleave", () => { if (!S.pinned) closeTip(); });
+  function wireDoc(d) {
+    d.addEventListener("mouseover", (e) => { const m = e.target.closest("mark.hl:not(.is-off)"); if (m && !S.pinned && matchMedia("(hover: hover)").matches) openTip(m); });
+    d.addEventListener("mouseout", (e) => { const m = e.target.closest("mark.hl"); if (m && !S.pinned && !m.contains(e.relatedTarget)) closeTip(); });
+    d.addEventListener("focusin", (e) => { const m = e.target.closest("mark.hl:not(.is-off)"); if (m && e.target.matches(":focus-visible")) openTip(m); });
+    d.addEventListener("click", (e) => {
+      const sup = e.target.closest("sup.fn");
+      if (sup) { openFlag(+sup.dataset.flag); return; }
+      const m = e.target.closest("mark.hl:not(.is-off)");
+      if (!m) return;
+      if (S.pinned === m) { closeTip(true); return; }
+      S.pinned = m; openTip(m);
+    });
+    d.addEventListener("keydown", (e) => { const m = e.target.closest("mark.hl"); if (m && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); S.pinned = m; openTip(m); } });
+  }
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeTip(true); });
+  document.addEventListener("click", (e) => { if (S.pinned && !e.target.closest("mark.hl, .tip")) closeTip(true); });
+  addEventListener("scroll", () => { if (tip.classList.contains("is-on")) { const m = S.pinned || document.querySelector("mark.hl.is-active"); m ? placeTip(m) : closeTip(true); } }, { passive: true });
+  addEventListener("resize", () => closeTip(true));
+
+  function showInDoc(i) {
+    const m = (S.marks[i] || [])[0];
+    if (!m) { LG.toast("This flag's position in the text isn't known."); return; }
+    if (narrow()) switchView("doc");
+    requestAnimationFrame(() => {
+      m.scrollIntoView({ behavior: "smooth", block: "center" });
+      (S.marks[i] || []).forEach((x) => { x.classList.remove("is-pulse"); void x.offsetWidth; x.classList.add("is-pulse"); });
+    });
+  }
+  function openFlag(i) {
+    switchView("flags");
+    const c = document.getElementById("fc-" + i);
+    if (!c) return;
+    c.classList.add("is-open"); c.querySelector(".fcard-head").setAttribute("aria-expanded", "true");
+    c.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  function applyFilters() {
+    document.querySelectorAll("mark.hl").forEach((m) => {
+      const idxs = m.dataset.flags.split(",").map(Number).filter((i) => visible[LG.lvl(S.flags[i].risk_level)]);
+      m.classList.remove("High", "Medium", "Low");
+      if (idxs.length) { m.classList.remove("is-off"); m.classList.add(idxs.reduce((b, i) => (LG.RANK[LG.lvl(S.flags[i].risk_level)] > LG.RANK[b] ? LG.lvl(S.flags[i].risk_level) : b), "Low")); m.tabIndex = 0; }
+      else { m.classList.add("is-off"); m.tabIndex = -1; }
+    });
+    document.querySelectorAll("sup.fn").forEach((s) => s.classList.toggle("is-off", !visible[LG.lvl(S.flags[+s.dataset.flag].risk_level)]));
+    document.querySelectorAll(".fcard").forEach((c) => c.classList.toggle("is-off", !visible[c.dataset.level]));
+  }
+
+  // --------------------------------------------------------------- flag cards
+  function flagCard(f, i) {
+    const L = LG.lvl(f.risk_level), isHi = !!hi();
+    const head = el("button", { class: "fcard-head", type: "button", "aria-expanded": "false", "aria-controls": "fb-" + i },
+      el("span", { class: `flagno ${L}` }, i + 1),
+      el("span", {}, el("span", { class: "fcard-title", lang: isHi ? "hi" : "en" }, T(f, "category")), f.section_reference ? el("span", { class: "fcard-sec" }, f.section_reference) : null),
+      el("span", { class: `lvl ${L}` }, L),
+      el("p", { class: "fcard-q" }, "“" + (f.clause_text || "").trim() + "”"));
+    const card = el("div", { class: "fcard", id: "fc-" + i, "data-level": L }, head,
+      el("div", { class: "fcard-body", id: "fb-" + i }, el("div", {}, explainList(f),
+        el("div", { class: "row-actions" },
+          el("button", { class: "btn btn-sm", type: "button", onclick: () => showInDoc(i) }, t("show")),
+          LG.voiceButton(() => flagSpeech(f), { label: t("listen") }),
+          el("button", { class: "btn btn-sm btn-quiet", type: "button", onclick: () => askAbout(i) }, LG.icon("chat"), t("askBtn"))))));
+    head.addEventListener("click", () => {
+      const open = card.classList.toggle("is-open");
+      head.setAttribute("aria-expanded", String(open));
+      if (open && !narrow()) showInDoc(i);
+    });
+    head.addEventListener("mouseenter", () => { if (!S.pinned) setActive([i]); });
+    head.addEventListener("mouseleave", () => { if (!S.pinned) setActive([]); });
+    return card;
+  }
+
+  // -------------------------------------------------------------------- chat
+  function starters() {
+    const ty = S.doc.document_type, out = ["What should I negotiate first, and how do I bring it up?"];
+    const hiI = S.flags.findIndex((f) => f.risk_level === "High");
+    if (hiI >= 0) out.push(`Rewrite flag #${hiI + 1} (${S.flags[hiI].category}) so it's fairer to me.`);
+    out.push(({ employment: "What happens if I resign in the first year?", rental: "What do I lose if I move out early?",
+      service_agreement: "How do I get out of this contract if it isn't working?", freelance: "When and how do I get paid?",
+      terms_of_service: "What can they do with my data?", nda: "How long am I bound by this, and what can't I say?" })[ty] || "What are my main obligations under this document?");
+    out.push("Explain this whole document in simple words.");
+    out.push("इस दस्तावेज़ की सबसे बड़ी समस्या हिंदी में समझाइए।");
+    return out;
+  }
+  function buildChat() {
+    const log = el("div", { class: "chat-log", id: "chat-log", "aria-live": "polite", "aria-label": "Conversation" });
+    const jump = el("button", { class: "chat-jump", type: "button", onclick: () => scrollChat(true) }, LG.icon("down"), "Latest");
+    log.addEventListener("scroll", () => jump.classList.toggle("is-on", log.scrollHeight - log.scrollTop - log.clientHeight > 160));
+    const input = el("textarea", { class: "input", id: "ask-input", rows: "1", placeholder: hi() ? "इस दस्तावेज़ के बारे में पूछें" : "Ask about this document", "aria-label": "Your question", maxlength: "2000", enterkeyhint: "send" });
+    const sendBtn = el("button", { class: "btn btn-primary send", type: "button", id: "send", "aria-label": "Send", title: "Send" }, LG.icon("send"));
+    const mic = el("button", { class: "mic", type: "button", id: "mic", "aria-label": "Speak your question", title: "Speak your question" }, LG.icon("mic"));
+    const foot = el("div", { class: "composer-foot" }, el("span", { id: "composer-hint" }, "Enter to send, Shift + Enter for a new line"), el("button", { type: "button", onclick: clearChat }, "Clear conversation"));
+    const grow = () => { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 168) + "px"; };
+    input.addEventListener("input", grow);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(input.value); } });
+    sendBtn.addEventListener("click", () => (S.sending ? stopAnswer() : send(input.value)));
+
+    const hint = () => document.getElementById("composer-hint");
+    const rec = LG.recorder({
+      language: () => (LG.lang() === "hi" ? "hi" : "auto"),
+      onText: (txt) => { input.value = (input.value ? input.value.trimEnd() + " " : "") + txt; grow(); input.focus(); },
+      onState: (st, x) => {
+        mic.classList.toggle("is-recording", st === "recording");
+        mic.classList.toggle("is-working", st === "working");
+        mic.setAttribute("aria-label", st === "recording" ? "Stop recording" : "Speak your question");
+        mic.style.setProperty("--lvl", x.level || 0);
+        const h = hint();
+        if (st === "recording") h.replaceChildren(el("span", { class: "rec-status" }, `Recording ${LG.fmtSec(x.seconds || 0)}`), x.interim ? "  " + x.interim.slice(-60) : "  Tap the mic again to finish");
+        else if (st === "working") h.textContent = "Turning your speech into text…";
+        else h.textContent = "Enter to send, Shift + Enter for a new line";
+      },
+    });
+    mic.addEventListener("click", () => (rec.active ? rec.stop() : rec.start()));
+
+    const composer = el("div", { class: "composer", id: "composer" }, el("div", { class: "composer-row" }, mic, input, sendBtn), foot);
+    const view = el("div", { class: "view", id: "view-chat", role: "tabpanel" },
+      el("div", { class: "chat" }, el("div", { id: "chat-notice" }), log, jump, composer));
+    loadChat(log);
+    return view;
+  }
+  function introBlock() {
+    return el("div", { class: "chat-intro" },
+      el("h3", {}, "Ask about this document"),
+      el("p", {}, "Answers come from this document, point to the clause they're based on, and can suggest fairer wording. Type or speak, in English or Hindi."),
+      el("div", { class: "starters" }, starters().map((q) => el("button", { class: "starter", type: "button", lang: /[ऀ-ॿ]/.test(q) ? "hi" : "en", onclick: () => send(q) }, q))));
+  }
+  async function loadChat(log) {
+    try {
+      const h = await LG.api(`/api/contracts/${encodeURIComponent(S.doc.id)}/chat`);
+      S.chatOn = h.available;
+      if (!h.available) { chatNotice("The chat needs an AI key on the server. Add GROQ_API_KEY to backend/.env and restart it."); }
+      if (!h.messages.length) log.append(introBlock());
+      h.messages.forEach((m) => log.append(m.role === "user" ? userRow(m.content) : aiRow(m.content, { failed: m.failed })));
+      requestAnimationFrame(() => scrollChat(false));
+    } catch (err) { log.append(el("p", { class: "none" }, err.message)); }
+  }
+  function chatNotice(msg, withRetry) {
+    const n = document.getElementById("chat-notice");
+    if (!n) return;
+    n.replaceChildren(msg ? el("div", { class: "notice-bar", role: "status" }, msg,
+      withRetry ? el("button", { type: "button", onclick: checkAi }, "Check again") : null) : "");
+  }
+  async function checkAi() {
+    chatNotice("Checking the connection to the AI…");
+    try { const s = await LG.api("/api/ai/status?refresh=true"); chatNotice(s.ok ? "" : s.message, !s.ok); if (s.ok) LG.toast("The AI is reachable again."); }
+    catch (err) { chatNotice(err.message, true); }
+  }
+  function onRef(n) {
+    const i = n - 1;
+    if (!S.flags[i]) return;
+    showInDoc(i);
+    if (!narrow()) { const m = (S.marks[i] || [])[0]; if (m) setTimeout(() => { S.pinned = m; openTip(m); }, 480); }
+  }
+  function paintRefs(node) {
+    node.querySelectorAll(".ref").forEach((b) => { const n = +b.textContent.slice(1); if (S.flags[n - 1]) b.classList.add(LG.lvl(S.flags[n - 1].risk_level)); });
+    node.querySelectorAll(".redline").forEach((fig) => {
+      if (fig.querySelector(".copy")) return;
+      fig.querySelector("figcaption").append(el("button", { class: "copy", type: "button", onclick: async () => {
+        try { await navigator.clipboard.writeText(fig.querySelector(".redline-text").textContent); LG.toast("Wording copied"); } catch (_) { LG.toast("Couldn't copy. Select the text instead.", { error: true }); }
+      } }, "Copy"));
+    });
+  }
+  const avatar = () => { const s = LG.seal(28); s.setAttribute("class", "m-av"); return s; };
+  function userRow(text) { return el("div", { class: "m-row user" }, el("div", { class: "m-bubble", lang: /[ऀ-ॿ]/.test(text) ? "hi" : "en" }, text)); }
+  function richBody(text) { const b = el("div", { class: "m-bubble" }); b.append(LG.renderRichText(text, onRef)); paintRefs(b); if (/[ऀ-ॿ]/.test(text)) b.lang = "hi"; return b; }
+  function aiRow(text, { failed = false, retry } = {}) {
+    const row = el("div", { class: `m-row ai ${failed ? "is-failed" : ""}` }, avatar(), failed && !text.includes("\n") ? el("div", { class: "m-bubble" }, text) : richBody(text));
+    const wrap = el("div", {}, row);
+    const actions = el("div", { class: "m-actions" });
+    if (failed && retry) actions.append(el("button", { class: "btn btn-quiet", type: "button", onclick: () => { wrap.remove(); send(retry, { again: true }); } }, LG.icon("refresh"), "Try again"));
+    if (!failed) actions.append(LG.voiceButton(() => row.querySelector(".m-bubble").textContent, { label: "Listen" }),
+      el("button", { class: "btn btn-quiet", type: "button", onclick: async () => { try { await navigator.clipboard.writeText(text); LG.toast("Answer copied"); } catch (_) {} } }, LG.icon("copy"), "Copy"));
+    if (actions.children.length) wrap.append(actions);
+    return wrap;
+  }
+  function scrollChat(smooth) { const l = document.getElementById("chat-log"); if (l) l.scrollTo({ top: l.scrollHeight, behavior: smooth ? "smooth" : "auto" }); }
+  function setSending(on) {
+    const b = document.getElementById("send");
+    if (!b) return;
+    b.replaceChildren(LG.icon(on ? "stop" : "send"));
+    b.setAttribute("aria-label", on ? "Stop the answer" : "Send"); b.title = on ? "Stop" : "Send";
+  }
+  function stopAnswer() { if (S.sending) S.sending.abort(); }
+
+  async function send(text, { again = false } = {}) {
+    text = (text || "").trim();
+    const input = document.getElementById("ask-input"), log = document.getElementById("chat-log");
+    if (!text || S.sending || !log) return;
+    if (!S.chatOn) { LG.toast("The chat isn't available on this server.", { error: true }); return; }
+    if (narrow()) switchView("chat");
+    input.value = ""; input.style.height = "auto";
+    log.querySelector(".chat-intro")?.remove();
+    if (!again) log.append(userRow(text));
+    const pending = el("div", { class: "m-row ai" }, avatar(), el("div", { class: "m-bubble" }, el("div", { class: "m-status" }, el("span", { class: "dots" }, el("span"), el("span"), el("span")), "Reading the document…")));
+    log.append(pending); scrollChat(true);
+    const ctrl = new AbortController(); S.sending = ctrl; setSending(true);
+    const slow = setTimeout(() => { const st = pending.querySelector(".m-status"); if (st) st.lastChild.textContent = "Still working. The AI service is slow right now…"; }, 9000);
+    let full = "";
+    try {
+      await LG.streamPost(`/api/contracts/${encodeURIComponent(S.doc.id)}/chat`, { message: text, lang: LG.lang() }, (sofar, done) => {
+        full = sofar;
+        const nearBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 140;
+        const b = richBody(sofar || " ");
+        if (!done) b.lastElementChild ? b.lastElementChild.classList.add("caret") : b.classList.add("caret");
+        pending.replaceChildren(avatar(), b);
+        if (nearBottom) scrollChat(false);
+      }, ctrl.signal);
+      clearTimeout(slow);
+      pending.replaceWith(aiRow(full || "(No answer came back. Ask again.)", { failed: !full, retry: text }));
+      chatNotice("");
+    } catch (err) {
+      clearTimeout(slow);
+      if (err.name === "AbortError") {
+        pending.replaceWith(full ? aiRow(full + "\n\n(Stopped.)") : el("div", {}));
+      } else {
+        pending.replaceWith(aiRow(err.message || "Something went wrong. Ask again.", { failed: true, retry: text }));
+        if (err.status === 503) chatNotice(err.message, true);
+      }
+    } finally {
+      S.sending = null; setSending(false); scrollChat(true);
+      if (!narrow()) input.focus({ preventScroll: true });
+    }
+  }
+  async function clearChat() {
+    if (!(await LG.confirm("Clear this conversation?", "The questions and answers for this document will be deleted.", "Clear"))) return;
+    try {
+      await LG.api(`/api/contracts/${encodeURIComponent(S.doc.id)}/chat`, { method: "DELETE" });
+      document.getElementById("chat-log").replaceChildren(introBlock());
+    } catch (err) { LG.toast(err.message, { error: true }); }
+  }
+  async function del() {
+    if (!(await LG.confirm("Delete this document?", `${S.doc.filename}, its highlights, report and conversation will be deleted. This can't be undone.`))) return;
+    try { await LG.api(`/api/contracts/${encodeURIComponent(S.doc.id)}`, { method: "DELETE" }); location.replace("dashboard.html"); }
+    catch (err) { LG.toast(err.message, { error: true }); }
+  }
+
+  render();
+  if (LG.lang() === "hi") setLanguage("hi", true);
+})();
+</script>
+</body>
+</html>

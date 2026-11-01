@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create your account — LexiGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&family=Schibsted+Grotesk:wght@400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<header id="topbar" class="topbar"></header>
+<main class="auth">
+  <section class="auth-form">
+    <div class="auth-form-in">
+      <h1 class="h1">Create your account</h1>
+      <p class="muted">Your documents are saved to your account and visible only to you.</p>
+      <form id="form" novalidate>
+        <div class="form-alert" id="alert" role="alert"></div>
+        <div class="field">
+          <label class="label" for="name">Your name</label>
+          <input class="input" id="name" name="name" autocomplete="name" required>
+          <p class="field-error" id="err-name"></p>
+        </div>
+        <div class="field">
+          <label class="label" for="email">Email</label>
+          <input class="input" id="email" name="email" type="email" autocomplete="email" required>
+          <p class="field-error" id="err-email"></p>
+        </div>
+        <div class="field">
+          <label class="label" for="password">Password</label>
+          <div class="pw-wrap">
+            <input class="input" id="password" name="password" type="password" autocomplete="new-password" aria-describedby="pw-hint" required>
+            <button class="pw-toggle" type="button" data-for="password" aria-pressed="false">Show</button>
+          </div>
+          <div class="pw-meter" id="meter" data-score="0" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <p class="hint" id="pw-hint">At least 8 characters, with a letter and a number.</p>
+          <p class="field-error" id="err-password"></p>
+        </div>
+        <fieldset class="choices field" style="margin-top:22px">
+          <legend>What will you mostly check? <span class="faint" style="font-weight:400">(optional)</span></legend>
+          <label class="choice"><input type="radio" name="role" value="employee"><span>Job offers and employment</span></label>
+          <label class="choice"><input type="radio" name="role" value="business"><span>Business contracts</span></label>
+          <label class="choice"><input type="radio" name="role" value="freelancer"><span>Freelance work</span></label>
+          <label class="choice"><input type="radio" name="role" value="student"><span>Studying law</span></label>
+          <label class="choice"><input type="radio" name="role" value="legal"><span>Legal work</span></label>
+          <label class="choice"><input type="radio" name="role" value="other"><span>Something else</span></label>
+        </fieldset>
+        <button class="btn btn-primary" type="submit" id="submit" style="width:100%;margin-top:28px;min-height:50px">Create account</button>
+        <p class="hint" style="margin-top:12px">LexiGuard is decision support, not legal advice.</p>
+      </form>
+      <p class="auth-switch">Already have an account? <a href="login.html" id="to-login">Sign in</a></p>
+    </div>
+  </section>
+  <aside class="auth-side" aria-hidden="true">
+    <div class="sheet auth-sheet">
+      <p class="clause-title">7. Lock-in</p>
+      <p>The Licensee shall not vacate the premises during the first eleven months. <mark class="hl High">If the Licensee leaves before the lock-in period ends, the entire security deposit shall be forfeited.</mark></p>
+      <div class="auth-note" style="--c:var(--high)"><b><span class="flagno High">1</span>Deposit forfeiture</b>Leave in month ten and you lose the whole deposit. Ask for a fixed penalty of one month's rent instead.</div>
+    </div>
+  </aside>
+</main>
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(async function () {
+  const next = LG.safeNext("analyze.html");
+  const me = await LG.me();
+  if (me) { location.replace(next); return; }
+  LG.topbar(null, null);
+  document.getElementById("to-login").href = "login.html" + location.search;
+
+  document.querySelectorAll(".pw-toggle").forEach((b) => b.addEventListener("click", () => {
+    const i = document.getElementById(b.dataset.for), show = i.type === "password";
+    i.type = show ? "text" : "password"; b.textContent = show ? "Hide" : "Show"; b.setAttribute("aria-pressed", String(show));
+  }));
+
+  const form = document.getElementById("form"), alertBox = document.getElementById("alert"), submit = document.getElementById("submit");
+  const meter = document.getElementById("meter");
+  form.password.addEventListener("input", () => {
+    const p = form.password.value;
+    let s = 0;
+    if (p.length >= 8) s++;
+    if (/[A-Za-z]/.test(p) && /\d/.test(p)) s++;
+    if (p.length >= 12) s++;
+    if (/[^A-Za-z0-9]/.test(p) || (/[a-z]/.test(p) && /[A-Z]/.test(p))) s++;
+    meter.dataset.score = p ? Math.max(1, s) : 0;
+  });
+
+  function setError(field, msg) {
+    const input = form[field], box = document.getElementById("err-" + field);
+    if (box) box.textContent = msg || "";
+    if (input) input.setAttribute("aria-invalid", msg ? "true" : "false");
+  }
+  function validate() {
+    let ok = true;
+    const name = form.name.value.trim(), email = form.email.value.trim(), pw = form.password.value;
+    setError("name", name ? "" : "Enter your name."); ok = ok && !!name;
+    const em = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    setError("email", em ? "" : "Enter a valid email address."); ok = ok && em;
+    const pwOk = pw.length >= 8 && /[A-Za-z]/.test(pw) && /\d/.test(pw);
+    setError("password", pwOk ? "" : "Use at least 8 characters, with a letter and a number."); ok = ok && pwOk;
+    return ok;
+  }
+  ["name", "email", "password"].forEach((f) => form[f].addEventListener("blur", () => { if (form[f].value) validate(); }));
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    alertBox.textContent = "";
+    if (!validate()) { form.querySelector('[aria-invalid="true"]').focus(); return; }
+    submit.classList.add("is-busy"); submit.disabled = true;
+    try {
+      await LG.api("/api/auth/signup", { method: "POST", json: {
+        name: form.name.value.trim(), email: form.email.value.trim(), password: form.password.value,
+        role: (form.querySelector('input[name="role"]:checked') || {}).value || null } });
+      location.replace(next);
+    } catch (err) {
+      const d = err.detail;
+      if (d && typeof d === "object" && d.field) { setError(d.field, d.message); form[d.field].focus(); }
+      else alertBox.textContent = err.message;
+    } finally {
+      submit.classList.remove("is-busy"); submit.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+RAHUL VERMA
+rahul.verma@example.com | +91 98100 00000 | linkedin.com/in/rahulverma | github.com/rahulv
+
+CAREER OBJECTIVE
+Motivated BCA graduate seeking an entry-level software developer role where I can apply my skills in Python and web development.
+
+EDUCATION
+Bachelor of Computer Applications (BCA), 2023 - 2026 - CGPA 8.4
+Senior Secondary (Class XII), CBSE, 2023 - 88%
+
+TECHNICAL SKILLS
+Python, JavaScript, React, FastAPI, PostgreSQL, Git, Machine Learning basics
+
+PROJECTS
+CareerPrep - AI mock interview coach built with FastAPI and React.
+Expense Tracker - a personal finance web app with charts and budgets.
+
+INTERNSHIPS
+Web Development Intern, Brightlabs Pvt Ltd (June - August 2025): built REST APIs and admin dashboards.
+
+CERTIFICATIONS
+Google Data Analytics Certificate; NPTEL Python for Data Science
+
+ACHIEVEMENTS
+Winner, college hackathon 2025. Member of the coding club.
+
+HOBBIES
+Chess, cricket, reading
+
+LANGUAGES KNOWN
+English, Hindi
+
+DECLARATION
+I hereby declare that the above information is true to the best of my knowledge.
+Date of birth: 14 March 2005
